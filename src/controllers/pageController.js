@@ -35,7 +35,7 @@ const showCutiIndex = async (req, res) => {
     const statusCounts = await prisma.leaveRequest.groupBy({
       by: ['status'],
       where: {
-        tanggalMulai: {
+        tanggalPengajuan: {
           gte: new Date(`${currentYear}-01-01`),
           lte: new Date(`${currentYear}-12-31`)
         }
@@ -59,9 +59,57 @@ const showCutiIndex = async (req, res) => {
       }
     });
 
+    const historyRequests = await prisma.leaveRequest.findMany({
+      where: {
+        status: {
+          in: ['APPROVED', 'REJECTED', 'CANCELLED']
+        }
+      },
+      include: {
+        employee: { select: { nik: true, namaKaryawan: true } },
+        quota: { select: { tahun: true } }
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 50
+    });
+
     const stats = { totalPending, totalApproved, totalRejected };
 
-    res.render('cuti/index', { pageTitle: 'Manajemen Cuti', requests, stats });
+    // STATISTIK DASHBOARD (TUGAS 3)
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    // 1. Total karyawan cuti hari ini (Cek di tabel detail tanggal)
+    const onLeaveToday = await prisma.leaveRequestDetail.count({
+      where: {
+        tanggal: today,
+        leaveRequest: { status: 'APPROVED' }
+      }
+    });
+
+    // 2. Top Agents bulan ini (group by agent via employee)
+    const topAgents = await prisma.$queryRaw`
+      SELECT a.name as agentName, COUNT(DISTINCT lr.id) as totalCuti
+      FROM leave_requests lr
+      JOIN leave_request_details lrd ON lr.id = lrd.leaveRequestId
+      JOIN employees e ON lr.nik = e.nik
+      JOIN agents a ON e.agentId = a.id
+      WHERE lr.status = 'APPROVED' 
+      AND MONTH(lrd.tanggal) = MONTH(CURRENT_DATE())
+      AND YEAR(lrd.tanggal) = YEAR(CURRENT_DATE())
+      GROUP BY a.name
+      ORDER BY totalCuti DESC
+      LIMIT 5
+    `;
+
+    const dashboardStats = { onLeaveToday, topAgents };
+
+    const agents = await prisma.agent.findMany({
+      where: { status: 'ACTIVE' },
+      select: { id: true, name: true }
+    });
+
+    res.render('cuti/index', { pageTitle: 'Manajemen Cuti', requests, historyRequests, stats, agents, dashboardStats });
   } catch (error) {
     res.status(500).send('Server error: ' + error.message);
   }
@@ -69,48 +117,27 @@ const showCutiIndex = async (req, res) => {
 
 const showCutiForm = async (req, res) => {
   try {
-    const { nik } = req.query;
-    
-    if (!nik) {
-      return res.redirect('/cuti');
-    }
-
-    const employee = await prisma.employee.findUnique({
-      where: { nik: nik },
-      select: { nik: true, namaKaryawan: true }
+    // Ambil semua karyawan yang aktif untuk dipilih oleh Admin
+    const employees = await prisma.employee.findMany({
+      where: { statusKaryawan: 'ACTIVE' },
+      select: { nik: true, namaKaryawan: true, agent: { select: { name: true } } },
+      orderBy: { namaKaryawan: 'asc' }
     });
 
-    if (!employee) {
-      return res.redirect('/cuti');
-    }
+    res.render('cuti/form', { pageTitle: 'Input Cuti Karyawan', employees });
+  } catch (error) {
+    res.status(500).send('Server error: ' + error.message);
+  }
+};
 
-    const currentYear = new Date().getFullYear();
-    
-    const quotaDb = await prisma.leaveQuota.findUnique({
-      where: {
-        nik_tahun: {
-          nik: nik,
-          tahun: currentYear
-        }
-      }
+const showAuditLogs = async (req, res) => {
+  try {
+    const logs = await prisma.auditLog.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 200
     });
 
-    let quota = null;
-    if (quotaDb) {
-      quota = {
-        jumlahCuti: quotaDb.jumlahCuti,
-        cutiTerpakai: quotaDb.cutiTerpakai,
-        sisa_cuti: quotaDb.jumlahCuti - quotaDb.cutiTerpakai
-      };
-    } else {
-      quota = {
-        jumlahCuti: 0,
-        cutiTerpakai: 0,
-        sisa_cuti: 0
-      };
-    }
-
-    res.render('cuti/form', { pageTitle: 'Ajukan Cuti', employee, quota });
+    res.render('audit/index', { pageTitle: '🛡️ Audit Trail', logs });
   } catch (error) {
     res.status(500).send('Server error: ' + error.message);
   }
@@ -119,5 +146,6 @@ const showCutiForm = async (req, res) => {
 module.exports = {
   showDashboard,
   showCutiIndex,
-  showCutiForm
+  showCutiForm,
+  showAuditLogs
 };

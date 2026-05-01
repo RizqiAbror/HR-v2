@@ -1,17 +1,37 @@
 <div class="mb-4 text-center">
   <h5 class="fw-bold mb-0">HR System v2</h5>
-  <small class="text-secondary">Dashboard Admin</small>
+  <small class="text-secondary text-uppercase"><%= user ? user.role : 'Guest' %></small>
 </div>
-<nav class="nav flex-column gap-2">
+
+<div class="mb-4 p-2 bg-dark rounded border border-secondary">
+  <div class="d-flex align-items-center">
+    <div class="flex-shrink-0">
+      <i class="bi bi-person-circle fs-3 text-secondary"></i>
+    </div>
+    <div class="flex-grow-1 ms-3 overflow-hidden">
+      <p class="mb-0 fw-bold text-white small"><%= user ? user.username : 'User' %></p>
+      <p class="mb-0 text-secondary" style="font-size: 10px;"><%= user ? user.nik : '-' %></p>
+    </div>
+  </div>
+</div>
+
+<nav class="nav flex-column gap-2 mb-auto">
   <a class="nav-link link-light <%= typeof pageTitle !== 'undefined' && pageTitle === 'Dashboard' ? 'fw-bold bg-secondary rounded px-2' : '' %>" href="/">
     <i class="bi bi-house-door me-2"></i> Dashboard
   </a>
   <a class="nav-link link-light <%= typeof pageTitle !== 'undefined' && pageTitle.includes('Cuti') ? 'fw-bold bg-secondary rounded px-2' : '' %>" href="/cuti">
     <i class="bi bi-umbrella me-2"></i> Cuti
   </a>
-  <!-- Placeholder modul lain -->
-  <!-- 
-  <a class="nav-link link-light" href="/karyawan"><i class="bi bi-people me-2"></i> Karyawan</a>
-  <a class="nav-link link-light" href="/gaji"><i class="bi bi-wallet2 me-2"></i> Gaji</a>
-  -->
+  
+  <% if (user && (user.role === 'SUPERADMIN' || user.role === 'HR_ADMIN')) { %>
+  <a class="nav-link link-light <%= typeof pageTitle !== 'undefined' && pageTitle.includes('Audit') ? 'fw-bold bg-secondary rounded px-2' : '' %>" href="/audit">
+    <i class="bi bi-shield-check me-2"></i> Audit Log
+  </a>
+  <% } %>
+
+  <hr class="border-secondary my-3">
+  
+  <a class="nav-link link-danger mt-auto" href="/logout">
+    <i class="bi bi-box-arrow-right me-2"></i> Keluar
+  </a>
 </nav>

@@ -1,6 +1,7 @@
 const express = require('express')
 const path = require('path')
 const expressLayouts = require('express-ejs-layouts')
+const session = require('express-session')
 require('dotenv').config()
 
 const app = express()
@@ -18,12 +19,39 @@ app.use(express.urlencoded({ extended: true }))
 // File statis (CSS, JS, gambar)
 app.use(express.static(path.join(__dirname, '../public')))
 
+// Session middleware
+app.use(session({
+  secret: 'kalapa-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 Jam
+}))
+
+// Global variables for templates
+app.use((req, res, next) => {
+  res.locals.user = req.session.user || null;
+  next();
+})
+
 // Import routes
+const authRoutes = require('./routes/authRoutes')
 const pageRoutes = require('./routes/pageRoutes')
 const cutiRoutes = require('./routes/cutiRoutes')
+const employeeRoutes = require('./routes/employeeRoutes')
 
-app.use('/', pageRoutes)
-app.use('/api/cuti', cutiRoutes)
+// Import middlewares
+const { isAuthenticated } = require('./middlewares/authMiddleware')
+
+// Public routes
+app.use('/', authRoutes)
+
+// Protected routes
+app.use('/', isAuthenticated, pageRoutes)
+app.use('/api/cuti', isAuthenticated, cutiRoutes)
+app.use('/api/employees', isAuthenticated, employeeRoutes)
+
+// Inisialisasi Cron Jobs
+require('./utils/cronJobs')
 
 // Route pertama — cek apakah server jalan
 app.get('/', (req, res) => {
