@@ -1,2 +1,8 @@
 node_modules/
 .env
+
+# Abaikan file data rahasia / master data
+data master/
+
+# Abaikan file upload lampiran lokal
+uploads/
