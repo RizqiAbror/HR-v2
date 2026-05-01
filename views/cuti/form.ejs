@@ -1,0 +1,132 @@
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="alert alert-info shadow-sm" role="alert">
+      <i class="bi bi-info-circle me-2"></i> Halo, <strong><%= employee.namaKaryawan %></strong>. Sisa cuti kamu: <strong><%= quota.sisa_cuti %> hari</strong> dari <%= quota.jumlahCuti %> hari.
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-0">Form Pengajuan Cuti</h5>
+      </div>
+      <div class="card-body">
+        <form id="formCuti">
+          <input type="hidden" id="nik" value="<%= employee.nik %>">
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="tanggalMulai" class="form-label">Tanggal Mulai</label>
+              <input type="date" class="form-control" id="tanggalMulai" required>
+            </div>
+            <div class="col-md-6">
+              <label for="tanggalAkhir" class="form-label">Tanggal Akhir</label>
+              <input type="date" class="form-control" id="tanggalAkhir" required>
+            </div>
+          </div>
+          
+          <div id="infoHari" class="mb-3 text-primary fw-bold"></div>
+          
+          <div class="mb-4">
+            <label for="alasan" class="form-label">Alasan Cuti</label>
+            <textarea class="form-control" id="alasan" rows="3" required></textarea>
+          </div>
+          
+          <div class="d-flex justify-content-between">
+            <a href="/cuti" class="btn btn-secondary">Kembali</a>
+            <button type="submit" class="btn btn-primary" id="btnSubmit">Ajukan Cuti</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const sisaCuti = parseInt('<%= quota.sisa_cuti %>');
+  const tglMulai = document.getElementById('tanggalMulai');
+  const tglAkhir = document.getElementById('tanggalAkhir');
+  const infoHari = document.getElementById('infoHari');
+  const formCuti = document.getElementById('formCuti');
+  const btnSubmit = document.getElementById('btnSubmit');
+
+  async function hitungHari() {
+    const mulai = tglMulai.value;
+    const akhir = tglAkhir.value;
+    
+    if (mulai && akhir) {
+      if (new Date(mulai) > new Date(akhir)) {
+        infoHari.innerHTML = '<span class="text-danger">Tanggal akhir harus setelah tanggal mulai</span>';
+        btnSubmit.disabled = true;
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/cuti/hitung?mulai=${mulai}&akhir=${akhir}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          const jml = data.jumlah_hari;
+          let infoHtml = `Jumlah hari kerja: ${jml} hari`;
+          
+          if (jml > sisaCuti) {
+            infoHtml += ' <span class="text-danger">(melebihi sisa cuti!)</span>';
+            btnSubmit.disabled = true;
+          } else if (jml === 0) {
+            infoHtml += ' <span class="text-danger">(rentang tanggal tidak valid)</span>';
+            btnSubmit.disabled = true;
+          } else {
+            btnSubmit.disabled = false;
+          }
+          
+          infoHari.innerHTML = infoHtml;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    } else {
+      infoHari.innerHTML = '';
+      btnSubmit.disabled = false;
+    }
+  }
+
+  tglMulai.addEventListener('change', hitungHari);
+  tglAkhir.addEventListener('change', hitungHari);
+
+  formCuti.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const bodyData = {
+      nik: document.getElementById('nik').value,
+      tanggalMulai: tglMulai.value,
+      tanggalAkhir: tglAkhir.value,
+      alasan: document.getElementById('alasan').value
+    };
+    
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = 'Loading...';
+    
+    try {
+      const response = await fetch('/api/cuti/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(bodyData)
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        alert('Pengajuan berhasil!');
+        window.location.href = '/cuti';
+      } else {
+        alert('Gagal: ' + data.message);
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = 'Ajukan Cuti';
+      }
+    } catch (e) {
+      alert('Terjadi kesalahan sistem');
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = 'Ajukan Cuti';
+    }
+  });
+</script>

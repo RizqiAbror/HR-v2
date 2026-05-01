@@ -1,0 +1,182 @@
+// ============================================================
+// SCHEMA PRISMA — MODUL CUTI (HR v2)
+// Tabel: employees (referensi), leave_quotas, leave_requests,
+//        national_holidays
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// TABEL REFERENSI: agents (klien/project luar)
+// Karena v2 = multi-tenant, semua employee
+// harus tahu dia di bawah agent/klien mana.
+// ─────────────────────────────────────────
+model Agent {
+  id         Int        @id @default(autoincrement())
+  name       String     @db.VarChar(200)        // Nama klien: PDG, DANA, Envagrow, dll
+  code       String     @unique @db.VarChar(50) // Kode singkat: PDG, GAN, ENV
+  status     String     @default("ACTIVE") @db.VarChar(20)
+  createdAt  DateTime   @default(now())
+
+  employees  Employee[]
+
+  @@map("agents")
+}
+
+// ─────────────────────────────────────────
+// TABEL UTAMA: employees
+// Satu karyawan = satu agent (satu project)
+// NIK adalah identifier utama bisnis.
+// Format NIK: proj_th_bln_no (contoh: PDG_25_01_001)
+// ─────────────────────────────────────────
+model Employee {
+  id                 Int      @id @default(autoincrement())
+  nik                String   @unique @db.VarChar(50)  // Natural key utama
+  agentId            Int
+  agent              Agent    @relation(fields: [agentId], references: [id])
+
+  // Data personal
+  namaKaryawan       String   @db.VarChar(200)
+  nomorKtp           String?  @db.VarChar(20)
+  npwp               String?  @db.VarChar(25)
+  statusPerkawinan   String?  @db.VarChar(20)  // TK/0, K/1, K/2, dll
+
+  // Data pekerjaan
+  jabatan            String   @db.VarChar(100)
+  statusTk           String   @db.VarChar(10)  // PKWT atau PKM
+  level              String   @db.VarChar(30)  // Staff, Supervisor, Manager, BOD
+  divisi             String?  @db.VarChar(100)
+  jointDate          DateTime @db.Date
+  endDate            DateTime? @db.Date    // Null = karyawan tetap / belum ada end date
+
+  // Kontak & atasan
+  emailKantor        String   @unique @db.VarChar(200)
+  emailPribadi       String?  @db.VarChar(200)
+  namaAtasan         String?  @db.VarChar(200)
+  emailAtasan        String?  @db.VarChar(200)
+
+  // Keuangan dasar
+  gajiPokok          Decimal  @default(0) @db.Decimal(15, 2)
+  allowance          Decimal  @default(0) @db.Decimal(15, 2)
+
+  // Bank
+  namaBank           String?  @db.VarChar(100)
+  noRekening         String?  @db.VarChar(50)
+  namaRekening       String?  @db.VarChar(200)
+
+  // Attachment PKWT (URL file yang diupload)
+  pkwtAttachmentUrl  String?  @db.VarChar(500)
+
+  statusKaryawan     String   @default("ACTIVE") @db.VarChar(20)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relasi ke modul cuti
+  leaveQuotas        LeaveQuota[]
+  leaveRequests      LeaveRequest[]
+
+  @@map("employees")
+}
+
+// ─────────────────────────────────────────
+// TABEL CUTI 1: leave_quotas (HEADER / MASTER)
+// Analogi: ini adalah "rekening saldo cuti"
+// Satu record = satu karyawan di satu tahun
+// ─────────────────────────────────────────
+model LeaveQuota {
+  id             Int      @id @default(autoincrement())
+
+  // Relasi ke karyawan (via NIK dan id)
+  nik            String   @db.VarChar(50)
+  employee       Employee @relation(fields: [nik], references: [nik])
+
+  tahun          Int      // Tahun berlakunya kuota: 2025, 2026, dst
+
+  // Saldo cuti
+  jumlahCuti     Int      @default(12)   // Total jatah cuti setahun
+  cutiTerpakai   Int      @default(0)    // Diupdate otomatis tiap request APPROVED
+  // sisa_cuti TIDAK disimpan — dihitung di backend: jumlahCuti - cutiTerpakai
+  // Kenapa? Supaya tidak ada data yang bisa inkonsisten.
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relasi ke detail/transaksi pengajuan cuti
+  leaveRequests  LeaveRequest[]
+
+  // CONSTRAINT: satu NIK hanya boleh 1 record per tahun
+  @@unique([nik, tahun])
+  @@map("leave_quotas")
+}
+
+// ─────────────────────────────────────────
+// TABEL CUTI 2: leave_requests (DETAIL / TRANSAKSI)
+// Analogi: ini adalah "mutasi/riwayat penarikan"
+// dari saldo cuti di leave_quotas.
+// Setiap pengajuan cuti = 1 baris di sini.
+// ─────────────────────────────────────────
+model LeaveRequest {
+  id                 Int      @id @default(autoincrement())
+  requestNo          String   @unique @db.VarChar(50)  // Nomor unik: LV-2025-0001
+
+  // Siapa yang mengajukan
+  nik                String   @db.VarChar(50)
+  employee           Employee @relation(fields: [nik], references: [nik])
+
+  // Kuota mana yang akan dipotong (tahun berapa)
+  quotaId            Int
+  quota              LeaveQuota @relation(fields: [quotaId], references: [id])
+
+  // Data pengajuan
+  tanggalPengajuan   DateTime @default(now())    // Auto: kapan form disubmit
+  tanggalMulai       DateTime                    // Input karyawan
+  tanggalAkhir       DateTime                    // Input karyawan
+  jumlahHari         Int                         // Dihitung sistem (tidak dihitung manual)
+  alasan             String   @db.Text
+
+  // Attachment surat cuti (foto surat fisik yang diupload admin)
+  attachmentUrl      String?  @db.VarChar(500)
+
+  // Status alur persetujuan
+  // PENDING_ATASAN → PENDING_HR → APPROVED
+  //               ↘ REJECTED
+  //                            ↘ REJECTED
+  //               CANCELLED (oleh karyawan sendiri)
+  status             String   @default("PENDING_ATASAN") @db.VarChar(30)
+
+  // Level 1: Persetujuan Atasan Langsung
+  approvedByAtasan   String?  @db.VarChar(100)  // NIK atasan
+  approvedAtAtasan   DateTime?
+  catatanAtasan      String?  @db.Text
+
+  // Level 2: Persetujuan HR Admin (final)
+  approvedByHr       String?  @db.VarChar(100)  // NIK HR admin
+  approvedAtHr       DateTime?
+  catatanHr          String?  @db.Text
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("leave_requests")
+}
+
+// ─────────────────────────────────────────
+// TABEL PENDUKUNG: national_holidays
+// Dipakai saat menghitung jumlah_hari cuti.
+// Hari libur nasional = tidak dipotong dari kuota.
+// ─────────────────────────────────────────
+model NationalHoliday {
+  id          Int      @id @default(autoincrement())
+  tanggal     DateTime @unique                   // UNIQUE: satu tanggal = satu entry
+  keterangan  String   @db.VarChar(200)          // Nama hari libur
+  tahun       Int                                // Untuk filter cepat per tahun
+
+  @@map("national_holidays")
+}

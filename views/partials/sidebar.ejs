@@ -1,0 +1,17 @@
+<div class="mb-4 text-center">
+  <h5 class="fw-bold mb-0">HR System v2</h5>
+  <small class="text-secondary">Dashboard Admin</small>
+</div>
+<nav class="nav flex-column gap-2">
+  <a class="nav-link link-light <%= typeof pageTitle !== 'undefined' && pageTitle === 'Dashboard' ? 'fw-bold bg-secondary rounded px-2' : '' %>" href="/">
+    <i class="bi bi-house-door me-2"></i> Dashboard
+  </a>
+  <a class="nav-link link-light <%= typeof pageTitle !== 'undefined' && pageTitle.includes('Cuti') ? 'fw-bold bg-secondary rounded px-2' : '' %>" href="/cuti">
+    <i class="bi bi-umbrella me-2"></i> Cuti
+  </a>
+  <!-- Placeholder modul lain -->
+  <!-- 
+  <a class="nav-link link-light" href="/karyawan"><i class="bi bi-people me-2"></i> Karyawan</a>
+  <a class="nav-link link-light" href="/gaji"><i class="bi bi-wallet2 me-2"></i> Gaji</a>
+  -->
+</nav>

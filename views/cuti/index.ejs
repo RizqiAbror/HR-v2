@@ -1,0 +1,150 @@
+<div class="row mb-4">
+  <div class="col-md-4">
+    <div class="card text-white bg-warning mb-3 shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title text-dark">Menunggu Persetujuan</h5>
+        <h2 class="mb-0 text-dark"><%= stats.totalPending %></h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-white bg-success mb-3 shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">Disetujui Tahun Ini</h5>
+        <h2 class="mb-0"><%= stats.totalApproved %></h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-white bg-danger mb-3 shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">Ditolak Tahun Ini</h5>
+        <h2 class="mb-0"><%= stats.totalRejected %></h2>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+    <h5 class="mb-0">Daftar Pengajuan Aktif</h5>
+    <!-- Tombol sementara untuk simulasi ajukan cuti -->
+    <a href="/cuti/form?nik=KTP_25_01_001" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle"></i> Ajukan Cuti (Test Karyawan)</a>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-striped table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>No</th>
+            <th>Request No</th>
+            <th>NIK</th>
+            <th>Nama Karyawan</th>
+            <th>Tgl Mulai</th>
+            <th>Tgl Akhir</th>
+            <th>Jml Hari</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (requests.length === 0) { %>
+            <tr>
+              <td colspan="9" class="text-center py-4">Tidak ada pengajuan aktif</td>
+            </tr>
+          <% } else { %>
+            <% requests.forEach((req, index) => { %>
+              <tr>
+                <td><%= index + 1 %></td>
+                <td><%= req.requestNo %></td>
+                <td><%= req.nik %></td>
+                <td><%= req.employee ? req.employee.namaKaryawan : '-' %></td>
+                <td><%= new Date(req.tanggalMulai).toLocaleDateString('id-ID') %></td>
+                <td><%= new Date(req.tanggalAkhir).toLocaleDateString('id-ID') %></td>
+                <td><%= req.jumlahHari %></td>
+                <td>
+                  <% if (req.status === 'PENDING_ATASAN') { %>
+                    <span class="badge bg-warning text-dark"><%= req.status %></span>
+                  <% } else if (req.status === 'PENDING_HR') { %>
+                    <span class="badge bg-info text-dark"><%= req.status %></span>
+                  <% } else { %>
+                    <span class="badge bg-secondary"><%= req.status %></span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (req.status === 'PENDING_ATASAN') { %>
+                    <!-- Anggap /cuti/:id belum dibuat, kita beri link placeholder -->
+                    <a href="#" class="btn btn-sm btn-outline-secondary">Lihat</a>
+                  <% } else if (req.status === 'PENDING_HR') { %>
+                    <button class="btn btn-sm btn-success" data-id="<%= req.id %>" onclick="approveHR('<%= req.id %>')">Approve</button>
+                    <button class="btn btn-sm btn-danger" data-id="<%= req.id %>" onclick="rejectHR('<%= req.id %>')">Reject</button>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  async function approveHR(id) {
+    if (!confirm('Setujui pengajuan ini?')) return;
+    
+    try {
+      const response = await fetch(`/api/cuti/approve/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'APPROVE',
+          role: 'HR',
+          approvedBy: 'HR_ADMIN'
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        alert('Berhasil disetujui');
+        window.location.reload();
+      } else {
+        alert('Gagal: ' + data.message);
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan sistem');
+    }
+  }
+
+  async function rejectHR(id) {
+    const alasan = prompt('Masukkan alasan penolakan:');
+    if (!alasan) return;
+    
+    try {
+      const response = await fetch(`/api/cuti/approve/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'REJECT',
+          role: 'HR',
+          approvedBy: 'HR_ADMIN',
+          catatan: alasan
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        alert('Pengajuan ditolak');
+        window.location.reload();
+      } else {
+        alert('Gagal: ' + data.message);
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan sistem');
+    }
+  }
+</script>
