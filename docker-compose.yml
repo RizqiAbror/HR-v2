@@ -9,7 +9,7 @@ services:
     environment:
       - PORT=3000
       # Koneksi database diarahkan ke service 'db' (MariaDB)
-      - DATABASE_URL=mysql://root:rootpassword@db:3306/hr2
+      - DATABASE_URL=mysql://root:rootpassword@db:3307/hr2-1
     depends_on:
       - db
     # Uncomment 2 baris di bawah ini jika ingin live-reload saat development:
@@ -22,11 +22,12 @@ services:
     image: mariadb:10.11
     container_name: hr2_db
     restart: always
+    command: [mysqld, --port=3307]
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: hr2
+      MYSQL_DATABASE: hr2-1
     ports:
-      - "3306:3306"
+      - "3307:3307"
     volumes:
       - db_data:/var/lib/mysql
 
