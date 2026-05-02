@@ -1,10 +1,12 @@
 const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('Start seeding...');
 
   // 1. Hapus data lama (urutan dari bawah ke atas)
+  await prisma.user.deleteMany();
   await prisma.leaveRequest.deleteMany();
   await prisma.leaveQuota.deleteMany();
   await prisma.nationalHoliday.deleteMany();
@@ -74,7 +76,6 @@ async function main() {
       { nik: emp1.nik, tahun: 2025, jumlahCuti: 12, cutiTerpakai: 0 },
       { nik: emp2.nik, tahun: 2025, jumlahCuti: 12, cutiTerpakai: 0 },
       { nik: emp3.nik, tahun: 2025, jumlahCuti: 12, cutiTerpakai: 0 },
-      // Tambahan 2026
       { nik: emp1.nik, tahun: 2026, jumlahCuti: 12, cutiTerpakai: 0 },
       { nik: emp2.nik, tahun: 2026, jumlahCuti: 12, cutiTerpakai: 0 },
       { nik: emp3.nik, tahun: 2026, jumlahCuti: 12, cutiTerpakai: 0 },
@@ -86,11 +87,9 @@ async function main() {
   // 4. Insert national_holidays untuk tahun 2025 & 2026
   await prisma.nationalHoliday.createMany({
     data: [
-      // 2025
       { tanggal: new Date('2025-01-01'), keterangan: 'Tahun Baru 2025', tahun: 2025 },
       { tanggal: new Date('2025-08-17'), keterangan: 'Kemerdekaan RI 2025', tahun: 2025 },
       { tanggal: new Date('2025-12-25'), keterangan: 'Natal 2025', tahun: 2025 },
-      // 2026
       { tanggal: new Date('2026-01-01'), keterangan: 'Tahun Baru 2026', tahun: 2026 },
       { tanggal: new Date('2026-05-01'), keterangan: 'Hari Buruh 2026', tahun: 2026 },
       { tanggal: new Date('2026-08-17'), keterangan: 'Kemerdekaan RI 2026', tahun: 2026 },
@@ -99,6 +98,20 @@ async function main() {
   });
 
   console.log('National holidays created.');
+
+  // 5. Seed Users (HR_ADMIN saja)
+  const passwordHash = await bcrypt.hash('hr123', 10);
+  await prisma.user.create({
+    data: {
+      emailKantor: 'yola@kalapa.com',
+      passwordHash: passwordHash,
+      role: 'HR_ADMIN',
+      status: 'ACTIVE',
+      employeeId: null
+    }
+  });
+
+  console.log('Users created.');
   console.log('Seeding finished.');
 }
 

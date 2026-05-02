@@ -1,0 +1,9 @@
+Input,NIK,Tahun,Jumlah Cuti,Sisa Cuti,>>>>> Master Cuti (Header),,,
+,,,,,,,,
+,,,,,,,,
+History Tabel Cuti,>>>> Detail Cuti,,,,,,,
+Input,NIK,Tanggal Pengajuan,Tanggal Mulai Cuti,Tanggal Akhir Cuti,Jumlah Pengajuan,Alasan Cuti,Attachment surat Cuti,Approval Atasan Langsung
+,,,,,,,,
+,,,,,,,,
+output,,,,,,,,
+Nama Karyawan,NIK,Project,Status Karyawan,Jumlah Cuti,Cuti Terpakai,Sisa Cuti,>>>>>> Master Cuti,

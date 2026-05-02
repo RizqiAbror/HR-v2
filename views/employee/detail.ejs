@@ -1,0 +1,165 @@
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/employee">Data Karyawan</a></li>
+    <li class="breadcrumb-item active"><%= employee.namaKaryawan %></li>
+  </ol>
+</nav>
+
+<div class="row">
+  <!-- KIRI: INFO DETAIL -->
+  <div class="col-md-8">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Informasi Lengkap Karyawan</h5>
+        <a href="/employee/<%= employee.nik %>/edit" class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-pencil me-1"></i> Edit Data
+        </a>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <table class="table table-borderless table-sm mb-0 detail-table">
+              <tr><td class="text-muted">NIK</td><td class="fw-bold"><%= employee.nik %></td></tr>
+              <tr><td class="text-muted">Nama Lengkap</td><td><%= employee.namaKaryawan %></td></tr>
+              <tr><td class="text-muted">Nomor KTP</td><td><%= employee.nomorKtp || '-' %></td></tr>
+              <tr><td class="text-muted">NPWP</td><td><%= employee.npwp || '-' %></td></tr>
+              <tr><td class="text-muted">Status Kawin</td><td><%= employee.statusPerkawinan || '-' %></td></tr>
+              <tr><td class="text-muted">Agent</td><td><span class="badge bg-light text-dark border"><%= employee.agent ? employee.agent.name : '-' %></span></td></tr>
+              <tr><td class="text-muted">Jabatan</td><td><%= employee.jabatan %></td></tr>
+              <tr><td class="text-muted">Level</td><td><%= employee.level %></td></tr>
+              <tr><td class="text-muted">Status TK</td><td><span class="badge bg-info"><%= employee.statusTk %></span></td></tr>
+              <tr><td class="text-muted">Status Aktif</td><td><span class="badge bg-<%= employee.statusKaryawan === 'ACTIVE' ? 'success' : 'secondary' %>"><%= employee.statusKaryawan %></span></td></tr>
+            </table>
+          </div>
+          <div class="col-md-6 border-start">
+            <table class="table table-borderless table-sm mb-0 detail-table">
+              <tr><td class="text-muted">Joint Date</td><td><%= new Date(employee.jointDate).toLocaleDateString('id-ID') %></td></tr>
+              <tr><td class="text-muted">End Date</td><td><%= employee.endDate ? new Date(employee.endDate).toLocaleDateString('id-ID') : '-' %></td></tr>
+              <tr><td class="text-muted">Email Kantor</td><td><%= employee.emailKantor %></td></tr>
+              <tr><td class="text-muted">Email Pribadi</td><td><%= employee.emailPribadi || '-' %></td></tr>
+              <tr><td class="text-muted">Nama Atasan</td><td><%= employee.namaAtasan || '-' %></td></tr>
+              <tr><td class="text-muted">Email Atasan</td><td><%= employee.emailAtasan || '-' %></td></tr>
+              <tr><td class="text-muted">Bank</td><td><%= employee.namaBank || '-' %></td></tr>
+              <tr><td class="text-muted">No Rekening</td><td><%= employee.noRekening || '-' %></td></tr>
+              <tr><td class="text-muted">Nama Rekening</td><td><%= employee.namaRekening || '-' %></td></tr>
+              <tr><td class="text-muted">Gaji Pokok</td><td class="fw-bold text-success">Rp <%= employee.gajiPokok.toLocaleString('id-ID') %></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KANAN: WIDGETS -->
+  <div class="col-md-4">
+    
+    <!-- CARD 1: PKWT -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white py-3">
+        <h6 class="mb-0">Attachment PKWT</h6>
+      </div>
+      <div class="card-body">
+        <% if (employee.pkwtAttachmentUrl) { %>
+          <a href="<%= employee.pkwtAttachmentUrl %>" target="_blank" class="btn btn-dark w-100 mb-3">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Lihat Dokumen PKWT
+          </a>
+        <% } else { %>
+          <div class="alert alert-warning py-2 text-center" style="font-size: 0.8rem;">
+            Belum ada dokumen PKWT diupload
+          </div>
+        <% } %>
+        
+        <hr>
+        <form id="formPkwt">
+          <label class="form-label small fw-bold">Update/Upload PKWT</label>
+          <input type="file" id="pkwtFile" class="form-control form-control-sm mb-2" accept=".pdf,image/*">
+          <button type="submit" id="btnPkwt" class="btn btn-primary btn-sm w-100">Upload PKWT</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- CARD 2: KUOTA CUTI -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">Kuota Cuti</h6>
+        <a href="/cuti/form?nik=<%= employee.nik %>" class="btn btn-sm btn-success py-0 px-2" style="font-size: 0.75rem;">Input Cuti</a>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0 align-middle">
+          <thead class="table-light">
+            <tr style="font-size: 0.75rem;">
+              <th class="ps-3">Tahun</th>
+              <th class="text-center">Jatah</th>
+              <th class="text-center">Sisa</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% employee.leaveQuotas.forEach(q => { %>
+              <tr style="font-size: 0.85rem;">
+                <td class="ps-3"><%= q.tahun %></td>
+                <td class="text-center"><%= q.jumlahCuti %></td>
+                <td class="text-center">
+                  <% const sisa = q.jumlahCuti - q.cutiTerpakai; %>
+                  <span class="badge bg-<%= sisa > 0 ? 'success' : 'danger' %>"><%= sisa %></span>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CARD 3: QUICK ACTIONS -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <a href="/cuti/riwayat/<%= employee.nik %>" class="btn btn-outline-primary btn-sm w-100">
+          <i class="bi bi-clock-history me-1"></i> Riwayat Cuti Lengkap
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  .detail-table td { padding: 0.5rem 0.25rem; }
+  .detail-table td:first-child { width: 140px; }
+</style>
+
+<script>
+  const formPkwt = document.getElementById('formPkwt');
+  const btnPkwt = document.getElementById('btnPkwt');
+  const pkwtFile = document.getElementById('pkwtFile');
+
+  formPkwt.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!pkwtFile.files[0]) return;
+
+    const formData = new FormData();
+    formData.append('pkwt', pkwtFile.files[0]);
+
+    try {
+      btnPkwt.disabled = true;
+      btnPkwt.innerHTML = 'Uploading...';
+      
+      const response = await fetch('/api/employee/<%= employee.nik %>/pkwt', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const res = await response.json();
+      if (res.success) {
+        alert('PKWT Berhasil diupload!');
+        window.location.reload();
+      } else {
+        alert('Gagal: ' + res.message);
+        btnPkwt.disabled = false;
+        btnPkwt.innerHTML = 'Upload PKWT';
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan sistem');
+      btnPkwt.disabled = false;
+      btnPkwt.innerHTML = 'Upload PKWT';
+    }
+  });
+</script>

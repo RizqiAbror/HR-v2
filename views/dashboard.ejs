@@ -1,6 +1,86 @@
-<div class="alert alert-success mt-4">
-  <h4 class="alert-heading">Dashboard - Coming Soon</h4>
-  <p>Selamat datang di HR System v2. Modul dashboard sedang dalam tahap pengembangan.</p>
-  <hr>
-  <p class="mb-0">Silakan gunakan menu di sebelah kiri untuk navigasi ke modul Cuti yang sudah aktif.</p>
+<div class="row">
+  <div class="col-md-12 grid-margin">
+    <div class="row">
+      <div class="col-12 col-xl-8 mb-4 mb-xl-0">
+        <h3 class="fw-bold">Selamat Datang, <%= currentUser.nama %>!</h3>
+        <h6 class="font-weight-normal mb-0 text-muted">Semua sistem berjalan normal. Anda memiliki <span class="text-primary fw-bold"><%= stats.pendingLeave %> antrean cuti</span> yang perlu diproses.</h6>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mt-4">
+  <div class="col-md-4 mb-4 stretch-card transparent">
+    <div class="card card-tale" style="background: var(--primary-color); color: white;">
+      <div class="card-body p-4">
+        <p class="mb-4 fs-5 fw-bold">Total Karyawan</p>
+        <p class="fs-1 mb-2 fw-bold"><%= stats.totalEmployee %></p>
+        <p>Aktif di sistem</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-4 stretch-card transparent">
+    <div class="card card-dark-blue" style="background: var(--secondary-color); color: white;">
+      <div class="card-body p-4">
+        <p class="mb-4 fs-5 fw-bold">Antrean Cuti</p>
+        <p class="fs-1 mb-2 fw-bold"><%= stats.pendingLeave %></p>
+        <p>Perlu persetujuan HR</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-4 stretch-card transparent">
+    <div class="card card-light-blue" style="background: #BB73FC; color: white;">
+      <div class="card-body p-4">
+        <p class="mb-4 fs-5 fw-bold">Total Agent</p>
+        <p class="fs-1 mb-2 fw-bold"><%= stats.totalAgent %></p>
+        <p>Proyek terdaftar</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mt-4">
+  <div class="col-md-7 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body p-4">
+        <p class="card-title fw-bold fs-5">Statistik Order Cuti</p>
+        <p class="font-weight-500 text-muted">Statistik penggunaan cuti bulanan di seluruh agent.</p>
+        <div class="d-flex align-items-center justify-content-center mt-5" style="height: 200px; background: #f8f9fa; border-radius: 15px;">
+           <div class="text-center">
+             <i class="bi bi-graph-up-arrow fs-1 text-muted opacity-25"></i>
+             <p class="text-muted small mt-2">Grafik dalam proses sinkronisasi...</p>
+           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body p-4">
+        <p class="card-title fw-bold fs-5">Aktivitas Terbaru</p>
+        <div class="list-wrapper pt-2">
+          <ul class="d-flex flex-column list-unstyled mb-0">
+            <li class="d-flex align-items-center py-3 border-bottom">
+              <div class="rounded-circle bg-success-subtle p-2 me-3">
+                <i class="bi bi-check2-circle text-success"></i>
+              </div>
+              <div>
+                <p class="mb-0 fw-bold small">Sistem Audit Trail Siap</p>
+                <small class="text-muted">Semua perubahan sekarang tercatat.</small>
+              </div>
+            </li>
+            <li class="d-flex align-items-center py-3 border-bottom">
+               <div class="rounded-circle bg-primary-subtle p-2 me-3">
+                 <i class="bi bi-shield-check text-primary"></i>
+               </div>
+               <div>
+                 <p class="mb-0 fw-bold small">Security Hardening</p>
+                 <small class="text-muted">Validasi file upload telah diperketat.</small>
+               </div>
+             </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

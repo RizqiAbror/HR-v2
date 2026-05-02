@@ -1,0 +1,228 @@
+<%
+  function fmtDate(d) {
+    if (!d) return '-';
+    const dd = new Date(d);
+    return dd.toLocaleDateString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric' });
+  }
+  function fmtDateTime(d) {
+    if (!d) return '-';
+    const dd = new Date(d);
+    return dd.toLocaleDateString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric' })
+           + ' ' + dd.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+  }
+  const statusMap = {
+    PENDING_ATASAN: { label:'Menunggu Atasan', cls:'warning text-dark' },
+    PENDING_HR:     { label:'Menunggu HR',     cls:'info text-dark' },
+    APPROVED:       { label:'Disetujui',       cls:'success' },
+    REJECTED:       { label:'Ditolak',         cls:'danger' },
+    CANCELLED:      { label:'Dibatalkan',      cls:'secondary' }
+  };
+  const st = statusMap[request.status] || { label: request.status, cls:'secondary' };
+%>
+
+<!-- BREADCRUMB -->
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/cuti">Manajemen Cuti</a></li>
+    <li class="breadcrumb-item active">Detail Pengajuan #<%= request.requestNo %></li>
+  </ol>
+</nav>
+
+<div class="row g-4">
+  <!-- ── KOLOM KIRI ── -->
+  <div class="col-md-7">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-0">Informasi Pengajuan</h5>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-borderless mb-0">
+          <tbody>
+            <tr><th class="ps-4 text-muted fw-normal" style="width:38%">Request No</th><td><strong><%= request.requestNo %></strong></td></tr>
+            <tr><th class="ps-4 text-muted fw-normal">NIK</th><td><%= request.nik %></td></tr>
+            <tr><th class="ps-4 text-muted fw-normal">Nama Karyawan</th><td><%= request.employee.namaKaryawan %></td></tr>
+            <tr><th class="ps-4 text-muted fw-normal">Jabatan</th><td><%= request.employee.jabatan %></td></tr>
+            <tr><th class="ps-4 text-muted fw-normal">Tanggal Mulai</th><td><%= fmtDate(request.tanggalMulai) %></td></tr>
+            <tr><th class="ps-4 text-muted fw-normal">Tanggal Akhir</th><td><%= fmtDate(request.tanggalAkhir) %></td></tr>
+            <tr><th class="ps-4 text-muted fw-normal">Jumlah Hari</th><td><strong><%= request.jumlahHari %> hari</strong></td></tr>
+            <tr><th class="ps-4 text-muted fw-normal">Alasan</th><td><%= request.alasan %></td></tr>
+            <tr>
+              <th class="ps-4 text-muted fw-normal">Status</th>
+              <td><span class="badge bg-<%= st.cls %>"><%= st.label %></span></td>
+            </tr>
+            <tr><th class="ps-4 text-muted fw-normal">Diajukan</th><td><%= fmtDateTime(request.tanggalPengajuan) %></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── KOLOM KANAN ── -->
+  <div class="col-md-5 d-flex flex-column gap-3">
+
+    <!-- Card 1: Persetujuan Atasan -->
+    <div class="card shadow-sm">
+      <div class="card-header bg-white py-2"><h6 class="mb-0">Persetujuan Atasan</h6></div>
+      <div class="card-body">
+        <% if (request.approvedByAtasan) { %>
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-success">APPROVED</span>
+            <small class="text-muted"><%= fmtDateTime(request.approvedAtAtasan) %></small>
+          </div>
+          <p class="mb-1"><strong>Oleh:</strong> <%= request.approvedByAtasan %></p>
+          <% if (request.catatanAtasan) { %>
+            <p class="mb-0 text-muted small"><strong>Catatan:</strong> <%= request.catatanAtasan %></p>
+          <% } %>
+        <% } else { %>
+          <span class="badge bg-warning text-dark">Menunggu</span>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Card 2: Persetujuan HR -->
+    <div class="card shadow-sm">
+      <div class="card-header bg-white py-2"><h6 class="mb-0">Persetujuan HR</h6></div>
+      <div class="card-body">
+        <% if (request.approvedByHr) { %>
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-success">APPROVED</span>
+            <small class="text-muted"><%= fmtDateTime(request.approvedAtHr) %></small>
+          </div>
+          <p class="mb-1"><strong>Oleh:</strong> <%= request.approvedByHr %></p>
+          <% if (request.catatanHr) { %>
+            <p class="mb-0 text-muted small"><strong>Catatan:</strong> <%= request.catatanHr %></p>
+          <% } %>
+        <% } else { %>
+          <span class="badge bg-secondary">Menunggu</span>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Card 3: Upload Surat Cuti -->
+    <div class="card shadow-sm">
+      <div class="card-header bg-white py-2"><h6 class="mb-0">Upload Surat Cuti</h6></div>
+      <div class="card-body">
+        <% if (request.attachmentUrl) { %>
+          <div class="mb-3">
+            <a href="<%= request.attachmentUrl %>" target="_blank" class="btn btn-sm btn-outline-success">
+              <i class="bi bi-file-earmark-check me-1"></i> Lihat Surat
+            </a>
+            <small class="text-muted ms-2">Upload ulang:</small>
+          </div>
+        <% } else { %>
+          <p class="text-muted small mb-2">Belum ada surat yang diupload.</p>
+        <% } %>
+        <div class="mb-2">
+          <input type="file" class="form-control form-control-sm" id="fileSurat" accept="image/*,.pdf">
+        </div>
+        <button type="button" class="btn btn-outline-primary btn-sm" id="btnUpload">
+          <i class="bi bi-upload me-1"></i> Upload Surat
+        </button>
+      </div>
+    </div>
+
+  </div><!-- end kolom kanan -->
+</div>
+
+<!-- ── ACTION BUTTONS ── -->
+<div class="mt-4 d-flex gap-2">
+  <a href="/cuti" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i> Kembali
+  </a>
+  <% if (request.status === 'PENDING_HR') { %>
+    <button type="button" class="btn btn-success" id="btnApprove">&#10003; Setujui (Final)</button>
+    <button type="button" class="btn btn-danger"  id="btnReject">&#10007; Tolak</button>
+  <% } else if (request.status === 'PENDING_ATASAN') { %>
+    <button type="button" class="btn btn-warning" id="btnApproveAtasan">&#10003; Setujui (Simulasi Atasan)</button>
+    <button type="button" class="btn btn-danger"  id="btnReject">&#10007; Tolak</button>
+  <% } %>
+</div>
+
+<!-- ── SCRIPT: semua kondisi dihandle via JS murni, TANPA EJS di dalam script ── -->
+<script>
+  const reqId         = <%= request.id %>;
+  const requestStatus = '<%= request.status %>';
+
+  // ── Upload Surat ──
+  document.getElementById('btnUpload').addEventListener('click', async () => {
+    const fileInput = document.getElementById('fileSurat');
+    if (!fileInput.files.length) { alert('Pilih file terlebih dahulu.'); return; }
+
+    const formData = new FormData();
+    formData.append('surat', fileInput.files[0]);
+
+    try {
+      const res  = await fetch('/api/cuti/upload-surat/' + reqId, { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success) { alert('Surat berhasil diupload!'); window.location.reload(); }
+      else              { alert('Gagal upload: ' + data.message); }
+    } catch (e) {
+      alert('Koneksi bermasalah saat upload.');
+    }
+  });
+
+  // ── Approve HR Final ──
+  const btnApprove = document.getElementById('btnApprove');
+  if (btnApprove) {
+    btnApprove.addEventListener('click', async () => {
+      if (!confirm('Setujui pengajuan ini secara final?')) return;
+      try {
+        const res  = await fetch('/api/cuti/approve/' + reqId, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'APPROVE', role: 'HR', approvedBy: 'HR_ADMIN', catatan: 'Disetujui' })
+        });
+        const data = await res.json();
+        if (data.success) { alert('Pengajuan disetujui!'); window.location.href = '/cuti'; }
+        else              { alert('Gagal: ' + data.message); }
+      } catch (e) {
+        alert('Koneksi bermasalah.');
+      }
+    });
+  }
+
+  // ── Approve Simulasi Atasan ──
+  const btnApproveAtasan = document.getElementById('btnApproveAtasan');
+  if (btnApproveAtasan) {
+    btnApproveAtasan.addEventListener('click', async () => {
+      if (!confirm('Setujui sebagai Atasan? (Status akan berubah ke PENDING_HR)')) return;
+      try {
+        const res  = await fetch('/api/cuti/approve/' + reqId, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'APPROVE', role: 'ATASAN', approvedBy: 'ATASAN_TEST', catatan: 'Oke lanjut ke HR' })
+        });
+        const data = await res.json();
+        if (data.success) { alert('Berhasil disetujui Atasan!'); window.location.reload(); }
+        else              { alert('Gagal: ' + data.message); }
+      } catch (e) {
+        alert('Koneksi bermasalah.');
+      }
+    });
+  }
+
+  // ── Reject (HR atau Atasan) ──
+  const btnReject = document.getElementById('btnReject');
+  if (btnReject) {
+    btnReject.addEventListener('click', async () => {
+      const catatan = prompt('Alasan penolakan:');
+      if (!catatan || !catatan.trim()) return;
+
+      const role = requestStatus === 'PENDING_ATASAN' ? 'ATASAN' : 'HR';
+      const approvedBy = requestStatus === 'PENDING_ATASAN' ? 'ATASAN_TEST' : 'HR_ADMIN';
+
+      try {
+        const res  = await fetch('/api/cuti/approve/' + reqId, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'REJECT', role, approvedBy, catatan })
+        });
+        const data = await res.json();
+        if (data.success) { alert('Pengajuan ditolak.'); window.location.href = '/cuti'; }
+        else              { alert('Gagal: ' + data.message); }
+      } catch (e) {
+        alert('Koneksi bermasalah.');
+      }
+    });
+  }
+</script>

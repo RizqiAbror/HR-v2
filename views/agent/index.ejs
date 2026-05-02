@@ -1,0 +1,144 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="mb-0"><%= pageTitle %></h4>
+    <span class="badge bg-primary"><%= agents.length %> Project Aktif</span>
+  </div>
+  <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahAgent">
+    <i class="bi bi-plus-circle me-1"></i> Tambah Agent
+  </button>
+</div>
+
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <div class="card shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4 py-3" width="10%">No</th>
+                <th width="25%">Kode Agent</th>
+                <th width="40%">Nama Project / Agent</th>
+                <th class="text-center" width="15%">Total Karyawan</th>
+                <th class="text-center pe-4" width="10%">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (agents.length === 0) { %>
+                <tr>
+                  <td colspan="5" class="text-center py-4 text-muted">Belum ada data agent</td>
+                </tr>
+              <% } else { %>
+                <% agents.forEach((a, idx) => { %>
+                  <tr>
+                    <td class="ps-4"><%= idx + 1 %></td>
+                    <td><span class="badge bg-dark px-3 py-2 fs-6"><%= a.code %></span></td>
+                    <td class="fw-bold"><%= a.name %></td>
+                    <td class="text-center">
+                      <span class="badge bg-info text-dark rounded-pill px-3"><%= a._count.employees %></span>
+                    </td>
+                    <td class="text-center pe-4">
+                      <button class="btn btn-sm btn-outline-primary" onclick="editAgent('<%= a.id %>', '<%= a.name %>')">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TAMBAH AGENT -->
+<div class="modal fade" id="modalTambahAgent" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Tambah Agent (Project) Baru</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="formTambah">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Kode Agent (Singkatan)</label>
+            <input type="text" name="code" class="form-control" placeholder="Contoh: JKT" required style="text-transform: uppercase;">
+            <div class="form-text text-warning">Kode tidak bisa diubah setelah dibuat.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Nama Lengkap Project</label>
+            <input type="text" name="name" class="form-control" placeholder="Contoh: Jakarta HQ" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary" id="btnSimpan">Simpan Agent</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // TAMBAH AGENT
+  const formTambah = document.getElementById('formTambah');
+  const btnSimpan = document.getElementById('btnSimpan');
+
+  formTambah.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(formTambah);
+    const data = Object.fromEntries(formData.entries());
+    data.code = data.code.toUpperCase(); // Ensure uppercase
+
+    try {
+      btnSimpan.disabled = true;
+      btnSimpan.innerHTML = 'Menyimpan...';
+
+      const response = await fetch('/api/agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const res = await response.json();
+      if (res.success) {
+        alert('Agent berhasil ditambahkan!');
+        window.location.reload();
+      } else {
+        alert('Gagal: ' + res.message);
+        btnSimpan.disabled = false;
+        btnSimpan.innerHTML = 'Simpan Agent';
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan sistem');
+      btnSimpan.disabled = false;
+      btnSimpan.innerHTML = 'Simpan Agent';
+    }
+  });
+
+  // EDIT AGENT
+  async function editAgent(id, currentName) {
+    const newName = prompt('Ubah Nama Project/Agent (Kode tidak bisa diubah):', currentName);
+    if (!newName || newName === currentName) return;
+
+    try {
+      const response = await fetch('/api/agent/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName })
+      });
+
+      const res = await response.json();
+      if (res.success) {
+        window.location.reload();
+      } else {
+        alert('Gagal: ' + res.message);
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan sistem');
+    }
+  }
+</script>

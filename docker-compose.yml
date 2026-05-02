@@ -3,7 +3,7 @@ version: '3.8'
 services:
   app:
     build: .
-    container_name: hr2_app
+    container_name: hr2-1_app
     ports:
       - "3000:3000"
     environment:
@@ -20,7 +20,7 @@ services:
   db:
     # Menggunakan MariaDB (bisa juga diganti mysql:8 jika perlu)
     image: mariadb:10.11
-    container_name: hr2_db
+    container_name: hr2-1_db
     restart: always
     command: [mysqld, --port=3307]
     environment:
@@ -29,7 +29,7 @@ services:
     ports:
       - "3307:3307"
     volumes:
-      - db_data:/var/lib/mysql
+      - hr2-1_db_data:/var/lib/mysql
 
 volumes:
-  db_data:
+  hr2-1_db_data:

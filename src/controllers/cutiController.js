@@ -1,48 +1,55 @@
 const { PrismaClient } = require('@prisma/client');
 const { hitungHariCuti } = require('../utils/hitungHariCuti');
+const { generateKuotaTahunan } = require('../utils/generateKuotaCuti');
+const { logAudit } = require('../utils/auditTrail');
+const multer = require('multer');
+const path   = require('path');
 
 const prisma = new PrismaClient();
 
+// Konfigurasi Multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../../public/uploads/surat-cuti'));
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, Date.now() + '-' + (req.body.nik || 'unknown') + '-surat' + ext);
+  }
+});
+
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Format file tidak didukung. Gunakan JPG, PNG, atau PDF'));
+  }
+});
+
 const getSisaCuti = async (req, res) => {
   try {
-    const { nik } = req.query;
-    const tahun = req.query.tahun ? parseInt(req.query.tahun) : new Date().getFullYear();
-
-    if (!nik) {
-      return res.status(400).json({ success: false, message: 'NIK harus diisi' });
+    const { nik, tahun } = req.query;
+    if (!nik || !tahun) {
+      return res.status(400).json({ success: false, message: 'Parameter nik dan tahun wajib diisi' });
     }
 
     const quota = await prisma.leaveQuota.findUnique({
       where: {
         nik_tahun: {
           nik: nik,
-          tahun: tahun,
-        },
-      },
-      include: {
-        employee: {
-          select: { namaKaryawan: true },
+          tahun: parseInt(tahun),
         },
       },
     });
 
     if (!quota) {
-      return res.status(404).json({ success: false, message: 'Data kuota cuti tidak ditemukan' });
+      return res.status(404).json({ success: false, message: 'Data kuota tidak ditemukan' });
     }
 
-    const sisa_cuti = quota.jumlahCuti - quota.cutiTerpakai;
-
-    return res.json({
-      success: true,
-      data: {
-        nik: quota.nik,
-        nama_karyawan: quota.employee.namaKaryawan,
-        tahun: quota.tahun,
-        jumlah_cuti: quota.jumlahCuti,
-        cuti_terpakai: quota.cutiTerpakai,
-        sisa_cuti: sisa_cuti,
-      },
-    });
+    const sisaCuti = quota.jumlahCuti - quota.cutiTerpakai;
+    return res.json({ success: true, data: { ...quota, sisaCuti } });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Terjadi kesalahan server', error: error.message });
   }
@@ -50,11 +57,14 @@ const getSisaCuti = async (req, res) => {
 
 const getRiwayatCuti = async (req, res) => {
   try {
-    const { nik } = req.params;
+    const { nik } = req.query;
+    if (!nik) {
+      return res.status(400).json({ success: false, message: 'Parameter nik wajib diisi' });
+    }
 
     const results = await prisma.leaveRequest.findMany({
-      where: { nik: nik },
-      orderBy: { createdAt: 'desc' },
+      where: { nik },
+      orderBy: { tanggalPengajuan: 'desc' },
       include: {
         quota: {
           select: { tahun: true },
@@ -105,40 +115,59 @@ const submitCuti = async (req, res) => {
       return res.status(400).json({ success: false, message: `Sisa cuti tidak mencukupi. Sisa: ${sisaCuti} hari, dibutuhkan: ${jumlahHari} hari` });
     }
 
+    // CEK OVERLAP TANGGAL
+    const overlapRequest = await prisma.leaveRequest.findFirst({
+      where: {
+        nik: nik,
+        status: { in: ['PENDING_ATASAN', 'PENDING_HR', 'APPROVED'] },
+        tanggalMulai: { lte: end },
+        tanggalAkhir: { gte: start }
+      }
+    });
+
+    if (overlapRequest) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Terdapat pengajuan cuti yang bentrok dengan tanggal ini (Request No: ${overlapRequest.requestNo})` 
+      });
+    }
+
+    let attachmentUrl = null;
+    if (req.file) {
+      attachmentUrl = '/uploads/surat-cuti/' + req.file.filename;
+    }
+
     const randomDigits = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     const requestNo = `LV-${startYear}-${randomDigits}`;
 
-    const newRequest = await prisma.$transaction(async (tx) => {
-      const result = await tx.leaveRequest.create({
-        data: {
-          requestNo,
-          nik,
-          quotaId: quota.id,
-          tanggalMulai: start,
-          tanggalAkhir: end,
-          jumlahHari,
-          alasan,
-          status: 'PENDING_ATASAN',
-        },
-      });
+    const newRequest = await prisma.leaveRequest.create({
+      data: {
+        requestNo,
+        nik,
+        quotaId: quota.id,
+        tanggalMulai: start,
+        tanggalAkhir: end,
+        jumlahHari,
+        alasan,
+        status: 'PENDING_HR',
+        attachmentUrl
+      },
+    });
 
-      return result;
+    // Logging Audit Trail
+    await logAudit(prisma, {
+      nik,
+      tableName: 'leave_requests',
+      action: 'CREATE',
+      oldData: null,
+      newData: newRequest,
+      changedBy: 'HR_ADMIN'
     });
 
     return res.json({ 
       success: true, 
       message: 'Pengajuan cuti berhasil disubmit', 
-      data: {
-        id: newRequest.id,
-        request_no: newRequest.requestNo,
-        nik: newRequest.nik,
-        tanggal_mulai: newRequest.tanggalMulai,
-        tanggal_akhir: newRequest.tanggalAkhir,
-        jumlah_hari: newRequest.jumlahHari,
-        alasan: newRequest.alasan,
-        status: newRequest.status,
-        created_at: newRequest.createdAt
-      } 
+      data: newRequest
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Terjadi kesalahan server', error: error.message });
@@ -148,13 +177,10 @@ const submitCuti = async (req, res) => {
 const approveCuti = async (req, res) => {
   try {
     const { id } = req.params;
-    const { action, approvedBy, catatan, role } = req.body;
+    const { action, approvedBy, catatan } = req.body;
 
     if (!['APPROVE', 'REJECT'].includes(action)) {
       return res.status(400).json({ success: false, message: 'Action tidak valid' });
-    }
-    if (!['ATASAN', 'HR'].includes(role)) {
-      return res.status(400).json({ success: false, message: 'Role tidak valid' });
     }
 
     const leaveRequest = await prisma.leaveRequest.findUnique({
@@ -166,59 +192,68 @@ const approveCuti = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Pengajuan cuti tidak ditemukan' });
     }
 
-    if (role === 'ATASAN' && leaveRequest.status !== 'PENDING_ATASAN') {
-      return res.status(400).json({ success: false, message: 'Aksi tidak valid untuk status pengajuan ini' });
-    }
-    if (role === 'HR' && leaveRequest.status !== 'PENDING_HR') {
-      return res.status(400).json({ success: false, message: 'Aksi tidak valid untuk status pengajuan ini' });
+    if (leaveRequest.status !== 'PENDING_HR') {
+      return res.status(400).json({ success: false, message: 'Status tidak valid untuk persetujuan HR' });
     }
 
-    let statusBaru = '';
-    let updateData = {};
+    let statusBaru = action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+    let updateData = {
+      status: statusBaru,
+      approvedAtHr: new Date(),
+      approvedByHr: approvedBy || 'HR_ADMIN'
+    };
 
-    if (role === 'ATASAN') {
-      statusBaru = action === 'APPROVE' ? 'PENDING_HR' : 'REJECTED';
-      updateData = {
-        status: statusBaru,
-        approvedByAtasan: approvedBy,
-        approvedAtAtasan: new Date(),
-        catatanAtasan: catatan,
-      };
-    } else if (role === 'HR') {
-      statusBaru = action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
-      updateData = {
-        status: statusBaru,
-        approvedByHr: approvedBy,
-        approvedAtHr: new Date(),
-        catatanHr: catatan,
-      };
+    if (action === 'REJECT' && catatan) {
+      updateData.catatanHr = catatan;
     }
+
+    let updatedReq;
 
     if (statusBaru === 'APPROVED') {
-      const [updatedReq] = await prisma.$transaction([
-        prisma.leaveRequest.update({
+      const result = await prisma.$transaction(async (tx) => {
+        const currentQuota = await tx.leaveQuota.findUnique({
+          where: { id: leaveRequest.quotaId }
+        });
+        
+        if ((currentQuota.cutiTerpakai + leaveRequest.jumlahHari) > currentQuota.jumlahCuti) {
+          throw new Error('Sisa cuti tidak mencukupi saat diproses (mungkin sudah terpakai di pengajuan lain).');
+        }
+
+        const updated = await tx.leaveRequest.update({
           where: { id: parseInt(id) },
           data: updateData,
-        }),
-        prisma.leaveQuota.update({
+        });
+
+        await tx.leaveQuota.update({
           where: { id: leaveRequest.quotaId },
           data: {
             cutiTerpakai: {
               increment: leaveRequest.jumlahHari,
             },
           },
-        })
-      ]);
+        });
 
-      return res.json({ success: true, message: 'Status berhasil diupdate', data: updatedReq });
+        return updated;
+      });
+      updatedReq = result;
     } else {
-      const updated = await prisma.leaveRequest.update({
+      updatedReq = await prisma.leaveRequest.update({
         where: { id: parseInt(id) },
         data: updateData,
       });
-
-      return res.json({ success: true, message: 'Status berhasil diupdate', data: updated });
     }
+
+    // Logging Audit Trail
+    await logAudit(prisma, {
+      nik: leaveRequest.nik,
+      tableName: 'leave_requests',
+      action: 'UPDATE',
+      oldData: { status: leaveRequest.status },
+      newData: { status: updatedReq.status },
+      changedBy: updateData.approvedByHr
+    });
+
+    return res.json({ success: true, message: 'Status berhasil diupdate', data: updatedReq });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Terjadi kesalahan server', error: error.message });
   }
@@ -236,13 +271,23 @@ const cancelCuti = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Pengajuan cuti tidak ditemukan' });
     }
 
-    if (leaveRequest.status !== 'PENDING_ATASAN') {
+    if (leaveRequest.status !== 'PENDING_HR') {
       return res.status(400).json({ success: false, message: 'Pengajuan tidak dapat dibatalkan karena sudah diproses' });
     }
 
-    await prisma.leaveRequest.update({
+    const updated = await prisma.leaveRequest.update({
       where: { id: parseInt(id) },
       data: { status: 'CANCELLED' },
+    });
+
+    // Logging Audit Trail
+    await logAudit(prisma, {
+      nik: leaveRequest.nik,
+      tableName: 'leave_requests',
+      action: 'UPDATE',
+      oldData: { status: leaveRequest.status },
+      newData: { status: updated.status },
+      changedBy: 'HR_ADMIN'
     });
 
     return res.json({ success: true, message: 'Pengajuan cuti berhasil dibatalkan' });
@@ -253,12 +298,28 @@ const cancelCuti = async (req, res) => {
 
 const hitungHari = async (req, res) => {
   try {
-    const { mulai, akhir } = req.query;
-    if (!mulai || !akhir) {
-      return res.status(400).json({ success: false, message: 'Parameter mulai dan akhir wajib diisi' });
+    const { tanggalMulai, tanggalAkhir } = req.body;
+    if (!tanggalMulai || !tanggalAkhir) {
+      return res.status(400).json({ success: false, message: 'Parameter tanggalMulai dan tanggalAkhir wajib diisi' });
     }
-    const result = await hitungHariCuti(new Date(mulai), new Date(akhir), prisma);
-    return res.json({ success: true, jumlah_hari: result });
+    const result = await hitungHariCuti(new Date(tanggalMulai), new Date(tanggalAkhir), prisma);
+    return res.json({ success: true, hari: result });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Terjadi kesalahan server', error: error.message });
+  }
+};
+
+const triggerGenerateKuota = async (req, res) => {
+  try {
+    const adminKey = req.headers['x-admin-key'];
+    if (adminKey !== process.env.SESSION_SECRET) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
+    const tahun = parseInt(req.body.tahun) || new Date().getFullYear();
+    const result = await generateKuotaTahunan(tahun, prisma);
+
+    return res.json({ success: true, message: 'Generate kuota selesai', data: result });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Terjadi kesalahan server', error: error.message });
   }
@@ -271,4 +332,6 @@ module.exports = {
   approveCuti,
   cancelCuti,
   hitungHari,
+  upload,
+  triggerGenerateKuota
 };

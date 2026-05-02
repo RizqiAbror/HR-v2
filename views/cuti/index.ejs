@@ -28,56 +28,57 @@
 <div class="card shadow-sm">
   <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
     <h5 class="mb-0">Daftar Pengajuan Aktif</h5>
-    <!-- Tombol sementara untuk simulasi ajukan cuti -->
-    <a href="/cuti/form?nik=KTP_25_01_001" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle"></i> Ajukan Cuti (Test Karyawan)</a>
+    <a href="/cuti/form" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle"></i> Input Pengajuan Cuti</a>
   </div>
   <div class="card-body p-0">
+    <div class="px-3 pt-3">
+      <a href="/cuti/form" class="btn btn-primary mb-3">+ Input Pengajuan Cuti</a>
+    </div>
     <div class="table-responsive">
       <table class="table table-striped table-hover mb-0">
         <thead class="table-light">
           <tr>
-            <th>No</th>
+            <th class="ps-3 py-2">No</th>
             <th>Request No</th>
             <th>NIK</th>
             <th>Nama Karyawan</th>
+            <th>Agent</th>
             <th>Tgl Mulai</th>
             <th>Tgl Akhir</th>
-            <th>Jml Hari</th>
+            <th>Hari</th>
             <th>Status</th>
-            <th>Aksi</th>
+            <th class="pe-3 text-center">Aksi</th>
           </tr>
         </thead>
         <tbody>
           <% if (requests.length === 0) { %>
             <tr>
-              <td colspan="9" class="text-center py-4">Tidak ada pengajuan aktif</td>
+              <td colspan="10" class="text-center py-4">Tidak ada pengajuan aktif</td>
             </tr>
           <% } else { %>
             <% requests.forEach((req, index) => { %>
               <tr>
-                <td><%= index + 1 %></td>
-                <td><%= req.requestNo %></td>
+                <td class="ps-3"><%= index + 1 %></td>
+                <td><small><strong><%= req.requestNo %></strong></small></td>
                 <td><%= req.nik %></td>
                 <td><%= req.employee ? req.employee.namaKaryawan : '-' %></td>
+                <td><span class="badge bg-light text-dark border"><%= (req.employee && req.employee.agent) ? req.employee.agent.code : '-' %></span></td>
                 <td><%= new Date(req.tanggalMulai).toLocaleDateString('id-ID') %></td>
                 <td><%= new Date(req.tanggalAkhir).toLocaleDateString('id-ID') %></td>
                 <td><%= req.jumlahHari %></td>
                 <td>
-                  <% if (req.status === 'PENDING_ATASAN') { %>
+                  <% if (req.status === 'PENDING_HR') { %>
                     <span class="badge bg-warning text-dark"><%= req.status %></span>
-                  <% } else if (req.status === 'PENDING_HR') { %>
-                    <span class="badge bg-info text-dark"><%= req.status %></span>
                   <% } else { %>
                     <span class="badge bg-secondary"><%= req.status %></span>
                   <% } %>
                 </td>
-                <td>
-                  <% if (req.status === 'PENDING_ATASAN') { %>
-                    <!-- Anggap /cuti/:id belum dibuat, kita beri link placeholder -->
-                    <a href="#" class="btn btn-sm btn-outline-secondary">Lihat</a>
-                  <% } else if (req.status === 'PENDING_HR') { %>
-                    <button class="btn btn-sm btn-success" data-id="<%= req.id %>" onclick="approveHR('<%= req.id %>')">Approve</button>
-                    <button class="btn btn-sm btn-danger" data-id="<%= req.id %>" onclick="rejectHR('<%= req.id %>')">Reject</button>
+                <td class="pe-3 text-center">
+                  <% if (req.status === 'PENDING_HR') { %>
+                    <button class="btn btn-sm btn-success py-0 px-2" style="font-size: 0.8rem;" onclick="approveHR('<%= req.id %>')">Approve ✓</button>
+                    <button class="btn btn-sm btn-danger py-0 px-2" style="font-size: 0.8rem;" onclick="rejectHR('<%= req.id %>')">Reject ✗</button>
+                  <% } else { %>
+                    <a href="/cuti/<%= req.id %>" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.8rem;">Detail</a>
                   <% } %>
                 </td>
               </tr>
@@ -101,8 +102,7 @@
         },
         body: JSON.stringify({
           action: 'APPROVE',
-          role: 'HR',
-          approvedBy: 'HR_ADMIN'
+          approvedBy: 'HR_ADMIN_YOLA'
         })
       });
       
@@ -130,8 +130,7 @@
         },
         body: JSON.stringify({
           action: 'REJECT',
-          role: 'HR',
-          approvedBy: 'HR_ADMIN',
+          approvedBy: 'HR_ADMIN_YOLA',
           catatan: alasan
         })
       });

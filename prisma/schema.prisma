@@ -81,6 +81,7 @@ model Employee {
   // Relasi ke modul cuti
   leaveQuotas        LeaveQuota[]
   leaveRequests      LeaveRequest[]
+  users              User[]
 
   @@map("employees")
 }
@@ -174,9 +175,42 @@ model LeaveRequest {
 // ─────────────────────────────────────────
 model NationalHoliday {
   id          Int      @id @default(autoincrement())
-  tanggal     DateTime @unique                   // UNIQUE: satu tanggal = satu entry
-  keterangan  String   @db.VarChar(200)          // Nama hari libur
-  tahun       Int                                // Untuk filter cepat per tahun
+  tanggal     DateTime @unique
+  keterangan  String   @db.VarChar(200)
+  tahun       Int
 
   @@map("national_holidays")
+}
+
+// ─────────────────────────────────────────
+// TABEL AUTH: users
+// ─────────────────────────────────────────
+model User {
+  id           Int       @id @default(autoincrement())
+  employeeId   Int?
+  employee     Employee? @relation(fields: [employeeId], references: [id])
+  emailKantor  String    @unique @db.VarChar(200)
+  passwordHash String    @db.VarChar(255)
+  role         String    @default("KARYAWAN") @db.VarChar(20)
+  status       String    @default("ACTIVE") @db.VarChar(20)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────
+// TABEL AUDIT LOG
+// ─────────────────────────────────────────
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  nik         String?  @db.VarChar(50)
+  tableName   String   @db.VarChar(50)
+  action      String   @db.VarChar(20)
+  oldData     Json?
+  newData     Json?
+  changedBy   String   @db.VarChar(100)
+  createdAt   DateTime @default(now())
+
+  @@map("audit_logs")
 }

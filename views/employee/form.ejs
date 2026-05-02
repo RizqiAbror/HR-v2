@@ -1,0 +1,230 @@
+<div class="row justify-content-center">
+  <div class="col-md-10">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-0"><%= pageTitle %></h5>
+      </div>
+      <div class="card-body">
+        <form id="formEmployee">
+          <div class="row g-3">
+            
+            <!-- DATA PEKERJAAN -->
+            <div class="col-12"><h6 class="text-primary border-bottom pb-1">Data Pekerjaan & Agent</h6></div>
+            
+            <div class="col-md-6">
+              <label class="form-label">Agent (Project)</label>
+              <select name="agentId" id="agentId" class="form-select" required>
+                <option value="">-- Pilih Agent --</option>
+                <% agents.forEach(a => { %>
+                  <option value="<%= a.id %>" <%= employee && employee.agentId === a.id ? 'selected' : '' %>><%= a.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label d-flex justify-content-between">
+                <span>NIK (Natural Key)</span>
+                <% if (mode === 'create') { %>
+                  <span class="badge bg-success align-self-center" style="font-size: 0.65rem;">Auto-Generate Active</span>
+                <% } %>
+              </label>
+              <input type="text" name="nik" id="nikInput" class="form-control" placeholder="Pilih Agent dan Joint Date untuk Generate" value="<%= employee ? employee.nik : '' %>" <%= mode === 'edit' ? 'readonly' : '' %> required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Jabatan</label>
+              <input type="text" name="jabatan" class="form-control" value="<%= employee ? employee.jabatan : '' %>" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Level</label>
+              <select name="level" class="form-select" required>
+                <% ['Staff', 'Supervisor A', 'Supervisor B', 'Manager A', 'Manager B', 'Manager C', 'BOD'].forEach(l => { %>
+                  <option value="<%= l %>" <%= employee && employee.level === l ? 'selected' : '' %>><%= l %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Status TK</label>
+              <select name="statusTk" class="form-select" required>
+                <option value="PKWT" <%= employee && employee.statusTk === 'PKWT' ? 'selected' : '' %>>PKWT</option>
+                <option value="PKM" <%= employee && employee.statusTk === 'PKM' ? 'selected' : '' %>>PKM</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Status Karyawan</label>
+              <select name="statusKaryawan" class="form-select" required>
+                <option value="ACTIVE" <%= employee && employee.statusKaryawan === 'ACTIVE' ? 'selected' : '' %>>ACTIVE</option>
+                <option value="INACTIVE" <%= employee && employee.statusKaryawan === 'INACTIVE' ? 'selected' : '' %>>INACTIVE</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Joint Date</label>
+              <input type="date" name="jointDate" id="jointDate" class="form-control" value="<%= employee ? new Date(employee.jointDate).toISOString().split('T')[0] : '' %>" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">End Date (Opsional)</label>
+              <input type="date" name="endDate" class="form-control" value="<%= employee && employee.endDate ? new Date(employee.endDate).toISOString().split('T')[0] : '' %>">
+            </div>
+
+            <!-- DATA PERSONAL -->
+            <div class="col-12 mt-4"><h6 class="text-primary border-bottom pb-1">Data Personal</h6></div>
+
+            <div class="col-md-6">
+              <label class="form-label">Nama Karyawan</label>
+              <input type="text" name="namaKaryawan" class="form-control" value="<%= employee ? employee.namaKaryawan : '' %>" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Nomor KTP</label>
+              <input type="text" name="nomorKtp" class="form-control" value="<%= employee ? employee.nomorKtp : '' %>">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">NPWP</label>
+              <input type="text" name="npwp" class="form-control" value="<%= employee ? employee.npwp : '' %>">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Status Perkawinan</label>
+              <select name="statusPerkawinan" class="form-select">
+                <% ['TK/0', 'K/0', 'K/1', 'K/2', 'K/3'].forEach(s => { %>
+                  <option value="<%= s %>" <%= employee && employee.statusPerkawinan === s ? 'selected' : '' %>><%= s %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <!-- KONTAK & ATASAN -->
+            <div class="col-12 mt-4"><h6 class="text-primary border-bottom pb-1">Kontak & Atasan</h6></div>
+
+            <div class="col-md-6">
+              <label class="form-label">Email Kantor</label>
+              <input type="email" name="emailKantor" class="form-control" value="<%= employee ? employee.emailKantor : '' %>" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Email Pribadi</label>
+              <input type="email" name="emailPribadi" class="form-control" value="<%= employee ? employee.emailPribadi : '' %>">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Nama Atasan</label>
+              <input type="text" name="namaAtasan" class="form-control" value="<%= employee ? employee.namaAtasan : '' %>">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Email Atasan</label>
+              <input type="email" name="emailAtasan" class="form-control" value="<%= employee ? employee.emailAtasan : '' %>">
+            </div>
+
+            <!-- PAYROLL & BANK -->
+            <div class="col-12 mt-4"><h6 class="text-primary border-bottom pb-1">Payroll & Rekening Bank</h6></div>
+
+            <div class="col-md-6">
+              <label class="form-label">Gaji Pokok</label>
+              <input type="number" name="gajiPokok" class="form-control" value="<%= employee ? employee.gajiPokok : 0 %>">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Nama Bank</label>
+              <input type="text" name="namaBank" class="form-control" value="<%= employee ? employee.namaBank : '' %>">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">No Rekening</label>
+              <input type="text" name="noRekening" class="form-control" value="<%= employee ? employee.noRekening : '' %>">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Nama Rekening</label>
+              <input type="text" name="namaRekening" class="form-control" value="<%= employee ? employee.namaRekening : '' %>">
+            </div>
+
+          </div>
+
+          <hr class="my-4">
+          <div class="d-flex justify-content-between">
+            <a href="/employee" class="btn btn-secondary">Batal</a>
+            <button type="submit" id="btnSubmit" class="btn btn-primary px-4">Simpan Perubahan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const formEmployee = document.getElementById('formEmployee');
+  const btnSubmit = document.getElementById('btnSubmit');
+  const agentSelect = document.getElementById('agentId');
+  const jointDateInput = document.getElementById('jointDate');
+  const nikInput = document.getElementById('nikInput');
+  const mode = '<%= mode %>';
+
+  // AUTO GENERATE NIK LOGIC
+  if (mode === 'create') {
+    const fetchNik = async () => {
+      const agentId = agentSelect.value;
+      const jointDate = jointDateInput.value;
+      
+      if (agentId && jointDate) {
+        try {
+          nikInput.value = 'Generating...';
+          const res = await fetch(`/api/employee/generate-nik?agentId=${agentId}&jointDate=${jointDate}`);
+          const data = await res.json();
+          if (data.success) {
+            nikInput.value = data.nik;
+          } else {
+            nikInput.value = '';
+          }
+        } catch (err) {
+          nikInput.value = '';
+        }
+      }
+    };
+
+    agentSelect.addEventListener('change', fetchNik);
+    jointDateInput.addEventListener('change', fetchNik);
+  }
+
+  formEmployee.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(formEmployee);
+    const data = Object.fromEntries(formData.entries());
+
+    // Fix empty date for endDate
+    if (!data.endDate) data.endDate = null;
+
+    try {
+      btnSubmit.disabled = true;
+      btnSubmit.innerHTML = 'Menyimpan...';
+
+      const method = '<%= mode %>' === 'edit' ? 'PATCH' : 'POST';
+      const url = '<%= mode %>' === 'edit' ? '/api/employee/<%= employee ? employee.nik : "" %>' : '/api/employee';
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const res = await response.json();
+      if (res.success) {
+        alert(res.message);
+        window.location.href = '/employee/' + (data.nik || '<%= employee ? employee.nik : "" %>');
+      } else {
+        alert('Gagal: ' + res.message);
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = 'Simpan Perubahan';
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan sistem');
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = 'Simpan Perubahan';
+    }
+  });
+</script>

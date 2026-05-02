@@ -1,86 +1,134 @@
 <div class="row justify-content-center">
   <div class="col-md-8">
-    <div class="alert alert-info shadow-sm" role="alert">
-      <i class="bi bi-info-circle me-2"></i> Halo, <strong><%= employee.namaKaryawan %></strong>. Sisa cuti kamu: <strong><%= quota.sisa_cuti %> hari</strong> dari <%= quota.jumlahCuti %> hari.
+    
+    <div class="mb-4">
+      <h4 class="mb-1"><%= pageTitle %></h4>
+      <p class="text-muted">Data dari surat cuti agent</p>
     </div>
 
-    <div class="card shadow-sm">
-      <div class="card-header bg-white py-3">
-        <h5 class="mb-0">Form Pengajuan Cuti</h5>
-      </div>
+    <!-- PILIH KARYAWAN -->
+    <div class="card shadow-sm mb-4">
       <div class="card-body">
-        <form id="formCuti">
-          <input type="hidden" id="nik" value="<%= employee.nik %>">
-          
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label for="tanggalMulai" class="form-label">Tanggal Mulai</label>
-              <input type="date" class="form-control" id="tanggalMulai" required>
-            </div>
-            <div class="col-md-6">
-              <label for="tanggalAkhir" class="form-label">Tanggal Akhir</label>
-              <input type="date" class="form-control" id="tanggalAkhir" required>
-            </div>
-          </div>
-          
-          <div id="infoHari" class="mb-3 text-primary fw-bold"></div>
-          
-          <div class="mb-4">
-            <label for="alasan" class="form-label">Alasan Cuti</label>
-            <textarea class="form-control" id="alasan" rows="3" required></textarea>
-          </div>
-          
-          <div class="d-flex justify-content-between">
-            <a href="/cuti" class="btn btn-secondary">Kembali</a>
-            <button type="submit" class="btn btn-primary" id="btnSubmit">Ajukan Cuti</button>
-          </div>
-        </form>
+        <label for="selectKaryawan" class="form-label fw-bold">Pilih Karyawan (Agent)</label>
+        <select id="selectKaryawan" class="form-select" onchange="window.location.href='/cuti/form?nik='+this.value">
+          <option value="">-- Pilih Karyawan --</option>
+          <% employees.forEach(e => { %>
+            <option value="<%= e.nik %>" <%= selectedEmployee && selectedEmployee.nik === e.nik ? 'selected' : '' %>>
+              [<%= e.nik %>] — <%= e.namaKaryawan %> (<%= e.agent ? e.agent.name : 'No Agent' %>)
+            </option>
+          <% }) %>
+        </select>
       </div>
     </div>
+
+    <!-- INFO & FORM JIKA SUDAH DIPILIH -->
+    <% if (selectedEmployee) { %>
+      <% if (!quota) { %>
+        <div class="alert alert-danger shadow-sm">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i> Kuota cuti untuk karyawan ini belum tersedia tahun ini.
+        </div>
+      <% } else { %>
+        <!-- INFO KARYAWAN -->
+        <div class="card shadow-sm mb-4 bg-light">
+          <div class="card-body py-2">
+            <table class="table table-borderless table-sm mb-0">
+              <tr><td width="30%" class="text-muted">NIK</td><td class="fw-bold">: <%= selectedEmployee.nik %></td></tr>
+              <tr><td class="text-muted">Nama</td><td class="fw-bold">: <%= selectedEmployee.namaKaryawan %></td></tr>
+              <tr><td class="text-muted">Agent</td><td class="fw-bold">: <%= selectedEmployee.agent ? selectedEmployee.agent.name : '-' %></td></tr>
+              <tr><td class="text-muted">Jabatan</td><td class="fw-bold">: <%= selectedEmployee.jabatan %></td></tr>
+              <tr><td class="text-muted">Sisa Cuti <%= tahun %></td>
+                  <td class="fw-bold text-<%= quota.sisa_cuti > 0 ? 'success' : 'danger' %>">: <%= quota.sisa_cuti %> hari</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- FORM INPUT -->
+        <div class="card shadow-sm">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0">Form Input Cuti</h5>
+          </div>
+          <div class="card-body">
+            <form id="formCuti">
+              <input type="hidden" id="nik" name="nik" value="<%= selectedEmployee.nik %>">
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="tanggalMulai" class="form-label">Tanggal Mulai</label>
+                  <input type="date" class="form-control" id="tanggalMulai" name="tanggalMulai" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="tanggalAkhir" class="form-label">Tanggal Akhir</label>
+                  <input type="date" class="form-control" id="tanggalAkhir" name="tanggalAkhir" required>
+                </div>
+              </div>
+
+              <div id="infoHari" class="mb-3 fw-bold"></div>
+
+              <div class="mb-3">
+                <label for="alasan" class="form-label">Alasan Cuti</label>
+                <textarea class="form-control" id="alasan" name="alasan" rows="3" required></textarea>
+              </div>
+
+              <div class="mb-4">
+                <label for="suratCuti" class="form-label">Foto/scan surat cuti yang ditandatangani agent</label>
+                <input class="form-control" type="file" id="suratCuti" name="suratCuti" accept="image/*,.pdf" required>
+                <div class="form-text">Wajib diupload sebagai bukti fisik (Maks 2MB).</div>
+              </div>
+
+              <div class="d-flex justify-content-between">
+                <a href="/cuti" class="btn btn-secondary">Kembali</a>
+                <button type="submit" class="btn btn-primary" id="btnSubmit">Simpan Pengajuan</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      <% } %>
+    <% } %>
+
   </div>
 </div>
 
 <script>
-  const sisaCuti = parseInt('<%= quota.sisa_cuti %>');
-  const tglMulai = document.getElementById('tanggalMulai');
-  const tglAkhir = document.getElementById('tanggalAkhir');
+  const tanggalMulai = document.getElementById('tanggalMulai');
+  const tanggalAkhir = document.getElementById('tanggalAkhir');
   const infoHari = document.getElementById('infoHari');
   const formCuti = document.getElementById('formCuti');
   const btnSubmit = document.getElementById('btnSubmit');
 
   async function hitungHari() {
-    const mulai = tglMulai.value;
-    const akhir = tglAkhir.value;
+    if (!tanggalMulai || !tanggalAkhir) return;
     
-    if (mulai && akhir) {
-      if (new Date(mulai) > new Date(akhir)) {
-        infoHari.innerHTML = '<span class="text-danger">Tanggal akhir harus setelah tanggal mulai</span>';
+    const start = tanggalMulai.value;
+    const end = tanggalAkhir.value;
+    
+    if (start && end) {
+      if (new Date(start) > new Date(end)) {
+        infoHari.innerHTML = '<span class="text-danger">Tanggal Akhir harus setelah Tanggal Mulai</span>';
         btnSubmit.disabled = true;
         return;
       }
       
       try {
-        const response = await fetch(`/api/cuti/hitung?mulai=${mulai}&akhir=${akhir}`);
+        const response = await fetch('/api/cuti/hitung', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ tanggalMulai: start, tanggalAkhir: end })
+        });
+        
         const data = await response.json();
         
         if (data.success) {
-          const jml = data.jumlah_hari;
-          let infoHtml = `Jumlah hari kerja: ${jml} hari`;
-          
-          if (jml > sisaCuti) {
-            infoHtml += ' <span class="text-danger">(melebihi sisa cuti!)</span>';
-            btnSubmit.disabled = true;
-          } else if (jml === 0) {
-            infoHtml += ' <span class="text-danger">(rentang tanggal tidak valid)</span>';
-            btnSubmit.disabled = true;
-          } else {
-            btnSubmit.disabled = false;
-          }
-          
-          infoHari.innerHTML = infoHtml;
+          infoHari.innerHTML = `Estimasi potongan cuti: <span class="text-primary">${data.hari} hari kerja</span>`;
+          btnSubmit.disabled = false;
+        } else {
+          infoHari.innerHTML = `<span class="text-danger">Error menghitung hari</span>`;
+          btnSubmit.disabled = true;
         }
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
+        infoHari.innerHTML = `<span class="text-danger">Terjadi kesalahan sistem</span>`;
+        btnSubmit.disabled = true;
       }
     } else {
       infoHari.innerHTML = '';
@@ -88,45 +136,39 @@
     }
   }
 
-  tglMulai.addEventListener('change', hitungHari);
-  tglAkhir.addEventListener('change', hitungHari);
+  if (tanggalMulai) tanggalMulai.addEventListener('change', hitungHari);
+  if (tanggalAkhir) tanggalAkhir.addEventListener('change', hitungHari);
 
-  formCuti.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const bodyData = {
-      nik: document.getElementById('nik').value,
-      tanggalMulai: tglMulai.value,
-      tanggalAkhir: tglAkhir.value,
-      alasan: document.getElementById('alasan').value
-    };
-    
-    btnSubmit.disabled = true;
-    btnSubmit.innerHTML = 'Loading...';
-    
-    try {
-      const response = await fetch('/api/cuti/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(bodyData)
-      });
+  if (formCuti) {
+    formCuti.addEventListener('submit', async (e) => {
+      e.preventDefault();
       
-      const data = await response.json();
+      const formData = new FormData(formCuti);
       
-      if (data.success) {
-        alert('Pengajuan berhasil!');
-        window.location.href = '/cuti';
-      } else {
-        alert('Gagal: ' + data.message);
+      try {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan...';
+        
+        const response = await fetch('/api/cuti/submit', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          alert('Pengajuan berhasil disimpan!');
+          window.location.href = '/cuti';
+        } else {
+          alert('Gagal: ' + data.message);
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = 'Simpan Pengajuan';
+        }
+      } catch (error) {
+        alert('Terjadi kesalahan sistem');
         btnSubmit.disabled = false;
-        btnSubmit.innerHTML = 'Ajukan Cuti';
+        btnSubmit.innerHTML = 'Simpan Pengajuan';
       }
-    } catch (e) {
-      alert('Terjadi kesalahan sistem');
-      btnSubmit.disabled = false;
-      btnSubmit.innerHTML = 'Ajukan Cuti';
-    }
-  });
+    });
+  }
 </script>
