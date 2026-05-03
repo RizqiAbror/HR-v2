@@ -1,242 +1,201 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
   <div>
-    <h4 class="mb-0"><%= pageTitle %></h4>
-    <p class="text-muted small mb-0">Catatan aktivitas dan perubahan data sistem</p>
+    <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Audit Trail</h2>
+    <p class="text-slate-500 mt-1 font-medium">Rekaman jejak seluruh aktivitas dan perubahan data di dalam sistem.</p>
   </div>
 </div>
 
-<!-- A. FILTER BAR -->
-<div class="card shadow-sm mb-3">
-  <div class="card-body py-3">
-    <form method="GET" action="/audit-trail" class="row g-2 align-items-center">
-      <div class="col-md-3">
-        <input type="text" name="nik" class="form-control form-control-sm" placeholder="Filter by NIK..." value="<%= nik || '' %>">
-      </div>
-      <div class="col-md-3">
-        <select name="table" class="form-select form-select-sm">
-          <option value="">-- Semua Tabel --</option>
-          <option value="employees" <%= tableName === 'employees' ? 'selected' : '' %>>Employees</option>
-          <option value="agents" <%= tableName === 'agents' ? 'selected' : '' %>>Agents (Projects)</option>
-          <option value="leave_requests" <%= tableName === 'leave_requests' ? 'selected' : '' %>>Leave Requests</option>
-          <option value="leave_quotas" <%= tableName === 'leave_quotas' ? 'selected' : '' %>>Leave Quotas</option>
-          <option value="national_holidays" <%= tableName === 'national_holidays' ? 'selected' : '' %>>National Holidays</option>
-        </select>
-      </div>
-      <div class="col-md-3">
-        <select name="action" class="form-select form-select-sm">
-          <option value="">-- Semua Aksi --</option>
-          <option value="CREATE" <%= action === 'CREATE' ? 'selected' : '' %>>CREATE</option>
-          <option value="UPDATE" <%= action === 'UPDATE' ? 'selected' : '' %>>UPDATE</option>
-          <option value="DELETE" <%= action === 'DELETE' ? 'selected' : '' %>>DELETE</option>
-        </select>
-      </div>
-      <div class="col-md-3 d-flex gap-2">
-        <button type="submit" class="btn btn-sm btn-primary w-100">Filter</button>
-        <a href="/audit-trail" class="btn btn-sm btn-outline-secondary w-100">Reset</a>
-      </div>
-    </form>
-  </div>
+<!-- FILTER BAR -->
+<div class="hris-card mb-8">
+  <form method="GET" action="/audit-trail" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+    <div class="md:col-span-3">
+      <label class="hris-label">NIK / User</label>
+      <input type="text" name="nik" class="hris-input" placeholder="Cari NIK..." value="<%= nik %>">
+    </div>
+    <div class="md:col-span-3">
+      <label class="hris-label">Filter Tabel</label>
+      <select name="table" class="hris-input appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.5rem_center] bg-no-repeat">
+        <option value="">Semua Tabel</option>
+        <option value="employees" <%= tableName === 'employees' ? 'selected' : '' %>>Employees</option>
+        <option value="agents" <%= tableName === 'agents' ? 'selected' : '' %>>Agents (Projects)</option>
+        <option value="leave_requests" <%= tableName === 'leave_requests' ? 'selected' : '' %>>Leave Requests</option>
+        <option value="leave_quotas" <%= tableName === 'leave_quotas' ? 'selected' : '' %>>Leave Quotas</option>
+        <option value="national_holidays" <%= tableName === 'national_holidays' ? 'selected' : '' %>>National Holidays</option>
+      </select>
+    </div>
+    <div class="md:col-span-3">
+      <label class="hris-label">Aksi</label>
+      <select name="action" class="hris-input appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.5rem_center] bg-no-repeat">
+        <option value="">Semua Aksi</option>
+        <option value="CREATE" <%= action === 'CREATE' ? 'selected' : '' %>>CREATE</option>
+        <option value="UPDATE" <%= action === 'UPDATE' ? 'selected' : '' %>>UPDATE</option>
+        <option value="DELETE" <%= action === 'DELETE' ? 'selected' : '' %>>DELETE</option>
+      </select>
+    </div>
+    <div class="md:col-span-3 flex gap-2">
+      <button type="submit" class="hris-btn-primary w-full py-2.5">Filter</button>
+      <a href="/audit-trail" class="hris-btn-outline w-full py-2.5 text-center">Reset</a>
+    </div>
+  </form>
 </div>
 
-<!-- B. TABEL DATA -->
-<div class="card shadow-sm">
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-sm table-hover mb-0 align-middle font-monospace" style="font-size: 0.85rem;">
-        <thead class="table-light">
+<!-- DATA TABLE -->
+<div class="hris-table-container">
+  <table class="hris-table">
+    <thead>
+      <tr>
+        <th class="w-16">No</th>
+        <th>Waktu</th>
+        <th>Target (NIK)</th>
+        <th>Aktivitas</th>
+        <th>Diubah Oleh</th>
+        <th class="text-right">Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (logs.length === 0) { %>
+        <tr>
+          <td colspan="6" class="text-center py-20 text-slate-400">Belum ada riwayat aktivitas</td>
+        </tr>
+      <% } else { %>
+        <% logs.forEach((log, idx) => { %>
           <tr>
-            <th class="ps-3 py-2">No</th>
-            <th>Waktu</th>
-            <th>Target (NIK)</th>
-            <th>Aktivitas</th>
-            <th>Diubah Oleh</th>
-            <th class="pe-3 text-center">Detail</th>
+            <td class="text-slate-300 font-bold"><%= (page - 1) * 50 + idx + 1 %></td>
+            <td class="text-xs font-medium text-slate-500"><%= new Date(log.createdAt).toLocaleString('id-ID') %></td>
+            <td>
+              <% if (log.nik) { %>
+                <span class="font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded text-xs"><%= log.nik %></span>
+              <% } else { %>
+                <span class="text-[10px] font-bold text-slate-400 border border-slate-100 px-2 py-1 rounded uppercase tracking-wider">Sistem</span>
+              <% } %>
+            </td>
+            <td>
+              <% 
+                let activity = "";
+                let badgeClass = "bg-slate-100 text-slate-600";
+                
+                if (log.tableName === 'employees') {
+                  activity = log.action === 'CREATE' ? 'Karyawan Baru' : 'Update Karyawan';
+                  badgeClass = log.action === 'CREATE' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600';
+                } else if (log.tableName === 'agents') {
+                  activity = 'Update Agent';
+                  badgeClass = 'bg-sky-50 text-sky-600';
+                } else if (log.tableName === 'leave_requests') {
+                  activity = 'Proses Cuti';
+                  badgeClass = 'bg-indigo-50 text-indigo-600';
+                } else if (log.tableName === 'national_holidays') {
+                  activity = 'Libur Nasional';
+                  badgeClass = 'bg-rose-50 text-rose-600';
+                } else {
+                  activity = log.tableName;
+                }
+              %>
+              <div class="flex items-center">
+                <span class="w-2 h-2 rounded-full <%= badgeClass.replace('bg-', 'bg-').split(' ')[1].replace('text-', 'bg-') %> mr-3"></span>
+                <span class="font-bold text-slate-700 text-sm"><%= activity %></span>
+              </div>
+            </td>
+            <td>
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-[10px] font-bold">
+                  <%= log.changedBy.charAt(0) %>
+                </div>
+                <span class="font-medium"><%= log.changedBy %></span>
+              </div>
+            </td>
+            <td class="text-right">
+              <button onclick='showLogDetail(<%= JSON.stringify(log) %>)' class="text-indigo-600 hover:text-indigo-800 font-bold text-xs uppercase tracking-wider">
+                Lihat Detail
+              </button>
+            </td>
+          </tr>
+        <% }) %>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<!-- PAGINATION -->
+<% if (totalPages > 1) { %>
+<div class="flex justify-center mt-10 gap-2">
+  <% for(let i = 1; i <= totalPages; i++) { %>
+    <a href="/audit-trail?page=<%= i %>&nik=<%= nik %>&table=<%= tableName %>&action=<%= action %>" 
+       class="w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm transition-all <%= page == i ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white text-slate-600 hover:bg-slate-50' %>">
+      <%= i %>
+    </a>
+  <% } %>
+</div>
+<% } %>
+
+<!-- MODAL DETAIL (Custom Tailwind) -->
+<div id="modalLog" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+  <div class="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+      <div>
+        <h5 class="text-xl font-bold text-slate-800">Detail Perubahan Data</h5>
+        <p id="logSubTitle" class="text-xs text-slate-500 font-medium mt-1"></p>
+      </div>
+      <button onclick="document.getElementById('modalLog').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+    </div>
+    <div class="p-0 max-h-[70vh] overflow-y-auto">
+      <table class="w-full text-left border-collapse">
+        <thead class="sticky top-0 bg-white border-b border-slate-100">
+          <tr>
+            <th class="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kolom</th>
+            <th class="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Data Lama</th>
+            <th class="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Data Baru</th>
           </tr>
         </thead>
-        <tbody>
-          <% if (logs.length === 0) { %>
-            <tr>
-              <td colspan="7" class="text-center py-4 text-muted">Belum ada aktivitas terekam</td>
-            </tr>
-          <% } else { %>
-            <% logs.forEach((log, idx) => { %>
-              <tr>
-                <td class="ps-3"><%= (page - 1) * 50 + idx + 1 %></td>
-                <td class="text-nowrap"><%= new Date(log.createdAt).toLocaleString('id-ID') %></td>
-                <td>
-                  <% if (log.nik) { %>
-                    <strong class="text-primary"><%= log.nik %></strong>
-                  <% } else { %>
-                    <span class="badge bg-light text-dark border">GLOBAL / SISTEM</span>
-                  <% } %>
-                </td>
-                <td>
-                  <% 
-                    let activity = "";
-                    let badgeColor = "secondary";
-                    
-                    if (log.tableName === 'employees') {
-                      activity = log.action === 'CREATE' ? 'Pendaftaran Karyawan Baru' : 'Pembaruan Data Karyawan';
-                      badgeColor = log.action === 'CREATE' ? 'success' : 'warning text-dark';
-                    } else if (log.tableName === 'agents') {
-                      activity = log.action === 'CREATE' ? 'Penambahan Agent/Proyek' : 'Perubahan Nama Agent/Proyek';
-                      badgeColor = 'info text-dark';
-                    } else if (log.tableName === 'leave_requests') {
-                      activity = 'Proses Pengajuan Cuti';
-                      badgeColor = 'primary';
-                    } else if (log.tableName === 'leave_quotas') {
-                      activity = 'Penyesuaian Kuota Cuti';
-                      badgeColor = 'dark';
-                    } else if (log.tableName === 'national_holidays') {
-                      activity = log.action === 'CREATE' ? 'Tambah Libur Nasional' : 'Hapus Libur Nasional';
-                      badgeColor = log.action === 'CREATE' ? 'success' : 'danger';
-                    } else {
-                      activity = `${log.action} pada ${log.tableName}`;
-                    }
-                  %>
-                  <span class="badge bg-<%= badgeColor %> py-1"><%= activity %></span>
-                </td>
-                <td><%= log.changedBy %></td>
-                <td class="pe-3 text-center">
-                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;" 
-                          onclick="lihatDetail(this, '<%= log.action %>')"
-                          data-old='<%- JSON.stringify(log.oldData || {}).replace(/'/g, "&#39;") %>'
-                          data-new='<%- JSON.stringify(log.newData || {}).replace(/'/g, "&#39;") %>'>
-                    Lihat
-                  </button>
-                </td>
-              </tr>
-            <% }) %>
-          <% } %>
+        <tbody id="logDiffBody">
+          <!-- Diff data will be injected here -->
         </tbody>
       </table>
     </div>
-  </div>
-</div>
-
-<!-- D. PAGINATION -->
-<% if (totalPages > 1) { %>
-  <nav class="mt-3">
-    <ul class="pagination justify-content-center pagination-sm">
-      <li class="page-item <%= page <= 1 ? 'disabled' : '' %>">
-        <a class="page-link" href="?page=<%= page - 1 %>&nik=<%= nik || '' %>&table=<%= tableName || '' %>&action=<%= action || '' %>">Prev</a>
-      </li>
-      <li class="page-item disabled"><span class="page-link">Halaman <%= page %> dari <%= totalPages %></span></li>
-      <li class="page-item <%= page >= totalPages ? 'disabled' : '' %>">
-        <a class="page-link" href="?page=<%= page + 1 %>&nik=<%= nik || '' %>&table=<%= tableName || '' %>&action=<%= action || '' %>">Next</a>
-      </li>
-    </ul>
-  </nav>
-<% } %>
-
-<!-- C. MODAL DETAIL (Reusable) -->
-<div class="modal fade text-start" id="modalDetail" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header py-2">
-        <h6 class="modal-title mb-0">Detail Perubahan Data</h6>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body p-0" id="modalContent">
-        <!-- Content injected via JS -->
-      </div>
+    <div class="px-8 py-6 bg-slate-50 border-t border-slate-100 flex justify-end">
+      <button onclick="document.getElementById('modalLog').classList.add('hidden')" class="hris-btn-primary px-10">Tutup</button>
     </div>
   </div>
 </div>
 
-<!-- E. SCRIPT -->
 <script>
-  function lihatDetail(btn, action) {
-    const oldStr = btn.getAttribute('data-old');
-    const newStr = btn.getAttribute('data-new');
+  function showLogDetail(log) {
+    const modal = document.getElementById('modalLog');
+    const subTitle = document.getElementById('logSubTitle');
+    const diffBody = document.getElementById('logDiffBody');
     
-    let oldData = {};
-    let newData = {};
+    subTitle.innerText = `${log.action} pada ${log.tableName} oleh ${log.changedBy}`;
     
-    try { oldData = JSON.parse(oldStr || '{}'); } catch(e){}
-    try { newData = JSON.parse(newStr || '{}'); } catch(e){}
+    const oldData = log.oldData || {};
+    const newData = log.newData || {};
+    const allKeys = new Set([...Object.keys(oldData), ...Object.keys(newData)]);
+    
+    let rows = '';
+    const ignoreKeys = ['updatedAt', 'createdAt', 'id'];
 
-    const contentDiv = document.getElementById('modalContent');
-    let html = '';
+    allKeys.forEach(key => {
+      if (ignoreKeys.includes(key)) return;
 
-    if (action === 'UPDATE') {
-      const keys = [...new Set([...Object.keys(oldData), ...Object.keys(newData)])];
-      let hasChanges = false;
-      let rows = '';
+      const oldVal = oldData[key] !== undefined ? oldData[key] : '-';
+      const newVal = newData[key] !== undefined ? newData[key] : '-';
+      
+      if (oldVal !== newVal) {
+        rows += `
+          <tr class="border-b border-slate-50 hover:bg-slate-50/30">
+            <td class="px-8 py-4 font-bold text-slate-500 text-xs uppercase tracking-wider">${key}</td>
+            <td class="px-8 py-4 text-sm text-rose-600 bg-rose-50/30 italic line-through decoration-rose-300/50">${oldVal}</td>
+            <td class="px-8 py-4 text-sm text-emerald-600 bg-emerald-50/30 font-bold">${newVal}</td>
+          </tr>
+        `;
+      }
+    });
 
-      keys.forEach(key => {
-        // Abaikan kolom teknis yang tidak relevan bagi user HR
-        const ignoreKeys = ['updatedAt', 'createdAt', 'id'];
-        if (ignoreKeys.includes(key)) return;
-
-        let oldVal = oldData[key] !== undefined ? oldData[key] : null;
-        let newVal = newData[key] !== undefined ? newData[key] : null;
-
-        if (typeof oldVal === 'object' && oldVal !== null) oldVal = JSON.stringify(oldVal);
-        if (typeof newVal === 'object' && newVal !== null) newVal = JSON.stringify(newVal);
-
-        if (oldVal != newVal) {
-          hasChanges = true;
-          rows += `
-            <tr>
-              <td><strong>${key}</strong></td>
-              <td class="text-danger"><del>${oldVal !== null ? oldVal : '<em>(Kosong)</em>'}</del></td>
-              <td class="text-success fw-bold">${newVal !== null ? newVal : '<em>(Dihapus)</em>'}</td>
-            </tr>
-          `;
-        }
-      });
-
-      if (!hasChanges) rows = '<tr><td colspan="3" class="text-center text-muted">Tidak ada perubahan terdeteksi</td></tr>';
-
-      html = `
-        <table class="table table-sm table-bordered mb-0" style="font-size: 0.85rem;">
-          <thead class="table-light"><tr><th width="30%">Kolom</th><th width="35%">Data Lama</th><th width="35%">Data Baru</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
-    } else if (action === 'CREATE') {
-      let rows = '';
-      Object.keys(newData).forEach(key => {
-        let val = newData[key];
-        if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
-        rows += `<tr><td><strong>${key}</strong></td><td class="text-success">${val}</td></tr>`;
-      });
-      html = `
-        <div class="alert alert-success m-2 py-2" style="font-size: 0.8rem;"><i class="bi bi-plus-circle me-1"></i> Data ditambahkan</div>
-        <table class="table table-sm table-bordered mb-0" style="font-size: 0.85rem;">
-          <thead class="table-light"><tr><th width="40%">Kolom</th><th>Data Dimasukkan</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
-    } else if (action === 'DELETE') {
-      let rows = '';
-      Object.keys(oldData).forEach(key => {
-        let val = oldData[key];
-        if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
-        rows += `<tr><td><strong>${key}</strong></td><td class="text-danger"><del>${val}</del></td></tr>`;
-      });
-      html = `
-        <div class="alert alert-danger m-2 py-2" style="font-size: 0.8rem;"><i class="bi bi-trash me-1"></i> Data dihapus dari sistem</div>
-        <table class="table table-sm table-bordered mb-0" style="font-size: 0.85rem;">
-          <thead class="table-light"><tr><th width="40%">Kolom</th><th>Data yang Dihapus</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
-    } else {
-      // Raw fallback just in case
-      html = `
-        <div class="p-3">
-          <span class="badge bg-secondary mb-2">Raw Data</span>
-          <pre class="bg-light p-2 border rounded" style="font-size: 0.8rem;">${JSON.stringify(newData || oldData, null, 2)}</pre>
-        </div>
-      `;
+    if (rows === '') {
+      rows = `<tr><td colspan="3" class="px-8 py-20 text-center text-slate-400 italic">Tidak ada detail perubahan field (mungkin data baru atau dihapus)</td></tr>`;
     }
 
-    contentDiv.innerHTML = html;
-    
-    // Show Modal
-    const myModal = new bootstrap.Modal(document.getElementById('modalDetail'));
-    myModal.show();
+    diffBody.innerHTML = rows;
+    modal.classList.remove('hidden');
   }
 </script>

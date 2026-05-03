@@ -1,12 +1,20 @@
-<div class="d-flex align-items-center justify-content-center" style="min-height: 60vh;">
-  <div class="text-center">
-    <div class="mb-3" style="font-size: 4rem;">&#128683;</div>
-    <h4 class="text-danger fw-bold"><%= pageTitle || 'Terjadi Kesalahan' %></h4>
-    <div class="alert alert-danger d-inline-block mt-2 px-4">
-      <%= message || 'Akses tidak diizinkan.' %>
-    </div>
-    <div class="mt-3">
-      <a href="/" class="btn btn-outline-secondary">&#8592; Kembali ke Dashboard</a>
+<div class="flex flex-col items-center justify-center py-20 animate-in fade-in slide-in-from-bottom-10 duration-500">
+  <div class="w-24 h-24 bg-rose-50 text-rose-500 rounded-3xl flex items-center justify-center text-5xl mb-8 shadow-xl shadow-rose-100">
+    <i data-lucide="shield-alert" class="w-12 h-12"></i>
+  </div>
+  
+  <h2 class="text-4xl font-black text-slate-800 tracking-tight text-center"><%= pageTitle || 'Terjadi Kesalahan' %></h2>
+  
+  <div class="max-w-md w-full bg-white rounded-3xl p-8 border border-slate-100 shadow-sm mt-8 text-center">
+    <p class="text-slate-500 font-medium leading-relaxed">
+      <%= message || 'Maaf, sepertinya Anda tidak memiliki akses ke halaman ini atau terjadi kesalahan pada sistem.' %>
+    </p>
+    
+    <div class="mt-8 flex flex-col gap-3">
+      <a href="/" class="hris-btn-primary w-full py-4 flex items-center justify-center">
+        <i data-lucide="home" class="mr-2 w-5 h-5"></i> KEMBALI KE DASHBOARD
+      </a>
+      <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">Error Code: <%= typeof status !== 'undefined' ? status : '403/404' %></p>
     </div>
   </div>
 </div>

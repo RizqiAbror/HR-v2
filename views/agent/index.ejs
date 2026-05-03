@@ -1,144 +1,146 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
   <div>
-    <h4 class="mb-0"><%= pageTitle %></h4>
-    <span class="badge bg-primary"><%= agents.length %> Project Aktif</span>
+    <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Data Agent (Project)</h2>
+    <p class="text-slate-500 mt-1 font-medium">Manajemen proyek dan kode agent untuk identitas karyawan.</p>
   </div>
-  <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahAgent">
-    <i class="bi bi-plus-circle me-1"></i> Tambah Agent
+  <button onclick="openModal('create')" class="hris-btn-primary flex items-center py-2.5">
+    <i data-lucide="plus" class="mr-2 w-5 h-5"></i> Tambah Agent Baru
   </button>
 </div>
 
-<div class="row">
-  <div class="col-md-8 mx-auto">
-    <div class="card shadow-sm">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-hover mb-0 align-middle">
-            <thead class="table-light">
-              <tr>
-                <th class="ps-4 py-3" width="10%">No</th>
-                <th width="25%">Kode Agent</th>
-                <th width="40%">Nama Project / Agent</th>
-                <th class="text-center" width="15%">Total Karyawan</th>
-                <th class="text-center pe-4" width="10%">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% if (agents.length === 0) { %>
-                <tr>
-                  <td colspan="5" class="text-center py-4 text-muted">Belum ada data agent</td>
-                </tr>
-              <% } else { %>
-                <% agents.forEach((a, idx) => { %>
-                  <tr>
-                    <td class="ps-4"><%= idx + 1 %></td>
-                    <td><span class="badge bg-dark px-3 py-2 fs-6"><%= a.code %></span></td>
-                    <td class="fw-bold"><%= a.name %></td>
-                    <td class="text-center">
-                      <span class="badge bg-info text-dark rounded-pill px-3"><%= a._count.employees %></span>
-                    </td>
-                    <td class="text-center pe-4">
-                      <button class="btn btn-sm btn-outline-primary" onclick="editAgent('<%= a.id %>', '<%= a.name %>')">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                    </td>
-                  </tr>
-                <% }) %>
-              <% } %>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+<!-- DATA TABLE -->
+<div class="hris-table-container">
+  <table class="hris-table">
+    <thead>
+      <tr>
+        <th class="w-16">No</th>
+        <th>Kode Agent</th>
+        <th>Nama Proyek / Agent</th>
+        <th class="text-center">Total Karyawan</th>
+        <th class="text-right">Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (agents.length === 0) { %>
+        <tr>
+          <td colspan="5" class="text-center py-20 text-slate-400">Belum ada data agent</td>
+        </tr>
+      <% } else { %>
+        <% agents.forEach((a, idx) => { %>
+          <tr class="group">
+            <td class="text-slate-300 font-bold"><%= idx + 1 %></td>
+            <td>
+              <span class="font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg text-sm tracking-widest"><%= a.code %></span>
+            </td>
+            <td>
+              <span class="font-bold text-slate-800"><%= a.name %></span>
+            </td>
+            <td class="text-center">
+              <span class="text-sm font-bold text-slate-500"><%= a._count.employees %> Org</span>
+            </td>
+            <td class="text-right">
+              <div class="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
+                <button onclick='openModal("edit", <%= JSON.stringify(a) %>)' class="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all">
+                  <i data-lucide="edit-3" class="w-4 h-4"></i>
+                </button>
+                <button onclick="deleteAgent('<%= a.id %>')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      <% } %>
+    </tbody>
+  </table>
 </div>
 
-<!-- MODAL TAMBAH AGENT -->
-<div class="modal fade" id="modalTambahAgent" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Tambah Agent (Project) Baru</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <form id="formTambah">
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">Kode Agent (Singkatan)</label>
-            <input type="text" name="code" class="form-control" placeholder="Contoh: JKT" required style="text-transform: uppercase;">
-            <div class="form-text text-warning">Kode tidak bisa diubah setelah dibuat.</div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Nama Lengkap Project</label>
-            <input type="text" name="name" class="form-control" placeholder="Contoh: Jakarta HQ" required>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary" id="btnSimpan">Simpan Agent</button>
-        </div>
-      </form>
+<!-- MODAL FORM (Custom Tailwind) -->
+<div id="modalAgent" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+  <div class="bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center">
+      <h5 id="modalTitle" class="text-xl font-bold text-slate-800">Tambah Agent</h5>
+      <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
     </div>
+    <form id="formAgent" class="p-8 space-y-6">
+      <input type="hidden" id="agentId" name="id">
+      <div>
+        <label class="hris-label">Kode Agent (3 Karakter)</label>
+        <input type="text" id="agentCode" name="code" class="hris-input font-black uppercase tracking-widest" maxlength="3" placeholder="Contoh: PDG" required>
+      </div>
+      <div>
+        <label class="hris-label">Nama Proyek / Agent</label>
+        <input type="text" id="agentName" name="name" class="hris-input" placeholder="Contoh: Pedigree Project" required>
+      </div>
+      <div class="pt-4 flex gap-3">
+        <button type="button" onclick="closeModal()" class="flex-1 text-sm font-bold text-slate-400 py-3">Batal</button>
+        <button type="submit" id="btnSave" class="flex-[2] hris-btn-primary py-3">Simpan Data</button>
+      </div>
+    </form>
   </div>
 </div>
 
 <script>
-  // TAMBAH AGENT
-  const formTambah = document.getElementById('formTambah');
-  const btnSimpan = document.getElementById('btnSimpan');
+  const modal = document.getElementById('modalAgent');
+  const form = document.getElementById('formAgent');
+  const title = document.getElementById('modalTitle');
+  const btnSave = document.getElementById('btnSave');
 
-  formTambah.addEventListener('submit', async (e) => {
+  function openModal(mode, data = null) {
+    title.innerText = mode === 'edit' ? 'Perbarui Agent' : 'Tambah Agent Baru';
+    if (mode === 'edit' && data) {
+      document.getElementById('agentId').value = data.id;
+      document.getElementById('agentCode').value = data.code;
+      document.getElementById('agentName').value = data.name;
+    } else {
+      form.reset();
+      document.getElementById('agentId').value = '';
+    }
+    modal.classList.remove('hidden');
+  }
+
+  function closeModal() {
+    modal.classList.add('hidden');
+  }
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const formData = new FormData(formTambah);
-    const data = Object.fromEntries(formData.entries());
-    data.code = data.code.toUpperCase(); // Ensure uppercase
+    const id = document.getElementById('agentId').value;
+    const code = document.getElementById('agentCode').value;
+    const name = document.getElementById('agentName').value;
 
     try {
-      btnSimpan.disabled = true;
-      btnSimpan.innerHTML = 'Menyimpan...';
+      btnSave.disabled = true;
+      const url = id ? `/api/agent/${id}` : '/api/agent';
+      const method = id ? 'PATCH' : 'POST';
 
-      const response = await fetch('/api/agent', {
-        method: 'POST',
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify({ code, name })
       });
 
-      const res = await response.json();
-      if (res.success) {
-        alert('Agent berhasil ditambahkan!');
+      const data = await res.json();
+      if (data.success) {
         window.location.reload();
       } else {
-        alert('Gagal: ' + res.message);
-        btnSimpan.disabled = false;
-        btnSimpan.innerHTML = 'Simpan Agent';
+        alert(data.message);
+        btnSave.disabled = false;
       }
-    } catch (error) {
+    } catch (err) {
       alert('Terjadi kesalahan sistem');
-      btnSimpan.disabled = false;
-      btnSimpan.innerHTML = 'Simpan Agent';
+      btnSave.disabled = false;
     }
   });
 
-  // EDIT AGENT
-  async function editAgent(id, currentName) {
-    const newName = prompt('Ubah Nama Project/Agent (Kode tidak bisa diubah):', currentName);
-    if (!newName || newName === currentName) return;
-
+  async function deleteAgent(id) {
+    if (!confirm('Hapus agent ini? Karyawan di bawahnya akan kehilangan referensi agent.')) return;
     try {
-      const response = await fetch('/api/agent/' + id, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName })
-      });
-
-      const res = await response.json();
-      if (res.success) {
-        window.location.reload();
-      } else {
-        alert('Gagal: ' + res.message);
-      }
-    } catch (error) {
-      alert('Terjadi kesalahan sistem');
-    }
+      const res = await fetch(`/api/agent/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) window.location.reload();
+    } catch (err) { alert('Gagal menghapus'); }
   }
 </script>

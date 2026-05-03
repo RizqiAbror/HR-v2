@@ -1,174 +1,453 @@
-<div class="row justify-content-center">
-  <div class="col-md-8">
-    
-    <div class="mb-4">
-      <h4 class="mb-1"><%= pageTitle %></h4>
-      <p class="text-muted">Data dari surat cuti agent</p>
+<!-- BREADCRUMB -->
+<nav class="mb-6">
+  <p class="text-sm text-slate-400 font-bold uppercase tracking-widest">
+    <a href="/cuti" class="hover:text-indigo-600 transition-colors">Manajemen Cuti</a>
+    <span class="mx-2">/</span>
+    <span class="text-slate-700">Input Pengajuan Cuti</span>
+  </p>
+</nav>
+
+<!-- STEP 1: CARI KARYAWAN (Live Search) -->
+<div class="hris-card mb-6">
+  <div class="flex items-center gap-3 mb-6">
+    <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+      <i data-lucide="search" class="w-4 h-4"></i>
     </div>
-
-    <!-- PILIH KARYAWAN -->
-    <div class="card shadow-sm mb-4">
-      <div class="card-body">
-        <label for="selectKaryawan" class="form-label fw-bold">Pilih Karyawan (Agent)</label>
-        <select id="selectKaryawan" class="form-select" onchange="window.location.href='/cuti/form?nik='+this.value">
-          <option value="">-- Pilih Karyawan --</option>
-          <% employees.forEach(e => { %>
-            <option value="<%= e.nik %>" <%= selectedEmployee && selectedEmployee.nik === e.nik ? 'selected' : '' %>>
-              [<%= e.nik %>] — <%= e.namaKaryawan %> (<%= e.agent ? e.agent.name : 'No Agent' %>)
-            </option>
-          <% }) %>
-        </select>
-      </div>
+    <div>
+      <h3 class="text-sm font-bold text-slate-800 uppercase tracking-widest">Cari Karyawan</h3>
+      <p class="text-xs text-slate-400 font-medium mt-0.5">Ketik nama, NIK, atau nama agent</p>
     </div>
-
-    <!-- INFO & FORM JIKA SUDAH DIPILIH -->
-    <% if (selectedEmployee) { %>
-      <% if (!quota) { %>
-        <div class="alert alert-danger shadow-sm">
-          <i class="bi bi-exclamation-triangle-fill me-2"></i> Kuota cuti untuk karyawan ini belum tersedia tahun ini.
-        </div>
-      <% } else { %>
-        <!-- INFO KARYAWAN -->
-        <div class="card shadow-sm mb-4 bg-light">
-          <div class="card-body py-2">
-            <table class="table table-borderless table-sm mb-0">
-              <tr><td width="30%" class="text-muted">NIK</td><td class="fw-bold">: <%= selectedEmployee.nik %></td></tr>
-              <tr><td class="text-muted">Nama</td><td class="fw-bold">: <%= selectedEmployee.namaKaryawan %></td></tr>
-              <tr><td class="text-muted">Agent</td><td class="fw-bold">: <%= selectedEmployee.agent ? selectedEmployee.agent.name : '-' %></td></tr>
-              <tr><td class="text-muted">Jabatan</td><td class="fw-bold">: <%= selectedEmployee.jabatan %></td></tr>
-              <tr><td class="text-muted">Sisa Cuti <%= tahun %></td>
-                  <td class="fw-bold text-<%= quota.sisa_cuti > 0 ? 'success' : 'danger' %>">: <%= quota.sisa_cuti %> hari</td></tr>
-            </table>
-          </div>
-        </div>
-
-        <!-- FORM INPUT -->
-        <div class="card shadow-sm">
-          <div class="card-header bg-white py-3">
-            <h5 class="mb-0">Form Input Cuti</h5>
-          </div>
-          <div class="card-body">
-            <form id="formCuti">
-              <input type="hidden" id="nik" name="nik" value="<%= selectedEmployee.nik %>">
-
-              <div class="row mb-3">
-                <div class="col-md-6">
-                  <label for="tanggalMulai" class="form-label">Tanggal Mulai</label>
-                  <input type="date" class="form-control" id="tanggalMulai" name="tanggalMulai" required>
-                </div>
-                <div class="col-md-6">
-                  <label for="tanggalAkhir" class="form-label">Tanggal Akhir</label>
-                  <input type="date" class="form-control" id="tanggalAkhir" name="tanggalAkhir" required>
-                </div>
-              </div>
-
-              <div id="infoHari" class="mb-3 fw-bold"></div>
-
-              <div class="mb-3">
-                <label for="alasan" class="form-label">Alasan Cuti</label>
-                <textarea class="form-control" id="alasan" name="alasan" rows="3" required></textarea>
-              </div>
-
-              <div class="mb-4">
-                <label for="suratCuti" class="form-label">Foto/scan surat cuti yang ditandatangani agent</label>
-                <input class="form-control" type="file" id="suratCuti" name="suratCuti" accept="image/*,.pdf" required>
-                <div class="form-text">Wajib diupload sebagai bukti fisik (Maks 2MB).</div>
-              </div>
-
-              <div class="d-flex justify-content-between">
-                <a href="/cuti" class="btn btn-secondary">Kembali</a>
-                <button type="submit" class="btn btn-primary" id="btnSubmit">Simpan Pengajuan</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      <% } %>
-    <% } %>
-
   </div>
+
+  <!-- Search Box -->
+  <div class="relative mb-4" id="searchWrapper">
+    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none"></i>
+    <input
+      type="text"
+      id="searchInput"
+      autocomplete="off"
+      placeholder="Contoh: Budi, KTP_25_01, atau PT Kalapa..."
+      class="hris-input pl-12 pr-10 py-3"
+      value="<%= selectedEmployee ? '[' + selectedEmployee.nik + '] ' + selectedEmployee.namaKaryawan : '' %>"
+    >
+    <% if (selectedEmployee) { %>
+      <a href="/cuti/form" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 transition-colors" title="Ganti karyawan">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </a>
+    <% } %>
+    <!-- Dropdown hasil pencarian -->
+    <div id="searchResults" class="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 hidden max-h-72 overflow-y-auto">
+      <!-- Diisi oleh JS -->
+    </div>
+  </div>
+
+  <% if (!selectedEmployee) { %>
+    <p class="text-xs text-slate-400 italic flex items-center gap-2">
+      <i data-lucide="info" class="w-3 h-3"></i>
+      Pilih karyawan terlebih dahulu untuk melanjutkan pengajuan cuti.
+    </p>
+  <% } %>
 </div>
 
+<!-- Data employees untuk JS (di-embed sebagai JSON) -->
 <script>
-  const tanggalMulai = document.getElementById('tanggalMulai');
-  const tanggalAkhir = document.getElementById('tanggalAkhir');
-  const infoHari = document.getElementById('infoHari');
-  const formCuti = document.getElementById('formCuti');
-  const btnSubmit = document.getElementById('btnSubmit');
+  const allEmployees = <%- JSON.stringify(employees.map(e => ({
+    nik: e.nik,
+    namaKaryawan: e.namaKaryawan,
+    agent: e.agent ? e.agent.name : '-',
+    jabatan: e.jabatan
+  }))) %>;
+</script>
 
-  async function hitungHari() {
-    if (!tanggalMulai || !tanggalAkhir) return;
-    
-    const start = tanggalMulai.value;
-    const end = tanggalAkhir.value;
-    
-    if (start && end) {
-      if (new Date(start) > new Date(end)) {
-        infoHari.innerHTML = '<span class="text-danger">Tanggal Akhir harus setelah Tanggal Mulai</span>';
-        btnSubmit.disabled = true;
+<% if (step === 'input' && selectedEmployee) { %>
+  <!-- STEP 2: CARD DATA KARYAWAN -->
+  <div class="hris-card mb-6 bg-gradient-to-br from-indigo-50 to-white border-indigo-100">
+    <div class="flex items-start justify-between mb-6">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-lg shadow-indigo-100">
+          <%= selectedEmployee.namaKaryawan.charAt(0) %>
+        </div>
+        <div>
+          <h3 class="text-lg font-black text-slate-800 tracking-tight"><%= selectedEmployee.namaKaryawan %></h3>
+          <div class="flex items-center gap-2 mt-1">
+            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded uppercase tracking-wider"><%= selectedEmployee.nik %></span>
+            <span class="text-[10px] text-slate-400 font-bold uppercase"><%= selectedEmployee.jabatan %></span>
+          </div>
+        </div>
+      </div>
+      <span class="text-[10px] font-black uppercase tracking-widest text-blue-400 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">Dari Surat Fisik</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Detail Karyawan -->
+      <div class="space-y-2.5 text-sm">
+        <div class="flex py-2 border-b border-slate-100">
+          <span class="w-28 text-slate-400 font-bold text-xs uppercase tracking-wider">Agent</span>
+          <span class="font-semibold text-slate-700"><%= selectedEmployee.agent ? selectedEmployee.agent.name : '-' %></span>
+        </div>
+        <div class="flex py-2 border-b border-slate-100">
+          <span class="w-28 text-slate-400 font-bold text-xs uppercase tracking-wider">Jabatan</span>
+          <span class="font-semibold text-slate-700"><%= selectedEmployee.jabatan %></span>
+        </div>
+        <div class="flex py-2">
+          <span class="w-28 text-slate-400 font-bold text-xs uppercase tracking-wider">Status TK</span>
+          <span class="hris-badge <%= selectedEmployee.statusTk === 'PKWT' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600' %>"><%= selectedEmployee.statusTk %></span>
+        </div>
+      </div>
+
+      <!-- Kuota Cuti -->
+      <div>
+        <h4 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Kuota Cuti <%= tahun %></h4>
+        <% if (quota) { %>
+          <div class="grid grid-cols-3 gap-2">
+            <div class="bg-white rounded-xl p-3 text-center border border-slate-100 shadow-sm">
+              <p class="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-1">Jatah</p>
+              <p class="text-xl font-black text-slate-700"><%= quota.jumlahCuti %></p>
+              <p class="text-[9px] text-slate-400">hari</p>
+            </div>
+            <div class="bg-orange-50 rounded-xl p-3 text-center border border-orange-100">
+              <p class="text-[9px] text-orange-400 uppercase font-black tracking-widest mb-1">Terpakai</p>
+              <p class="text-xl font-black text-orange-600"><%= quota.cutiTerpakai %></p>
+              <p class="text-[9px] text-orange-400">hari</p>
+            </div>
+            <%
+              let sisBg = "bg-emerald-50 border-emerald-100";
+              let sisText = "text-emerald-600";
+              let sisLabel = "text-emerald-400";
+              if (quota.sisaCuti <= 0) { sisBg = "bg-red-50 border-red-100"; sisText = "text-red-600"; sisLabel = "text-red-400"; }
+              else if (quota.sisaCuti <= 5) { sisBg = "bg-yellow-50 border-yellow-100"; sisText = "text-yellow-600"; sisLabel = "text-yellow-400"; }
+            %>
+            <div class="<%= sisBg %> rounded-xl p-3 text-center border">
+              <p class="text-[9px] <%= sisLabel %> uppercase font-black tracking-widest mb-1">Sisa</p>
+              <p class="text-xl font-black <%= sisText %>"><%= quota.sisaCuti %></p>
+              <p class="text-[9px] <%= sisLabel %>">hari</p>
+            </div>
+          </div>
+        <% } else { %>
+          <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-start gap-3">
+            <i data-lucide="alert-triangle" class="w-5 h-5 text-yellow-500 shrink-0 mt-0.5"></i>
+            <div>
+              <p class="text-sm font-bold text-yellow-700">Belum Ada Kuota</p>
+              <p class="text-xs text-yellow-600 mt-0.5">Karyawan ini belum memiliki jatah cuti tahun <%= tahun %>.</p>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: FORM DETAIL / BLOKIR -->
+  <% if (!quota || quota.sisaCuti <= 0) { %>
+    <div class="hris-card text-center py-14 border-red-100 bg-red-50">
+      <div class="w-16 h-16 bg-red-100 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <i data-lucide="ban" class="w-8 h-8"></i>
+      </div>
+      <h4 class="text-lg font-black text-red-700 mb-2">Pengajuan Tidak Bisa Dilanjutkan</h4>
+      <p class="text-sm text-red-500 mb-8 max-w-sm mx-auto">
+        <%= !quota ? 'Karyawan ini belum memiliki data jatah cuti di sistem untuk tahun ' + tahun + '.' : 'Sisa cuti karyawan ini sudah habis (0 hari). Tidak dapat mengajukan cuti baru.' %>
+      </p>
+      <a href="/cuti" class="hris-btn-outline text-sm px-8">Kembali ke Manajemen Cuti</a>
+    </div>
+  <% } else { %>
+    <div class="hris-card">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <i data-lucide="file-edit" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-slate-800 uppercase tracking-widest">Detail Pengajuan</h3>
+          <p class="text-xs text-slate-400 font-medium mt-0.5 italic">Isi berdasarkan surat cuti fisik yang diterima</p>
+        </div>
+      </div>
+
+      <form id="formCutiInput" novalidate>
+        <input type="hidden" name="nik" id="nikKaryawan" value="<%= selectedEmployee.nik %>">
+
+        <!-- Tanggal -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label class="hris-label">Tanggal Mulai <span class="text-rose-500">*</span></label>
+            <input type="date" id="tanggalMulai" name="tanggalMulai" class="hris-input" required>
+          </div>
+          <div>
+            <label class="hris-label">Tanggal Akhir <span class="text-rose-500">*</span></label>
+            <input type="date" id="tanggalAkhir" name="tanggalAkhir" class="hris-input" required>
+          </div>
+        </div>
+
+        <!-- Info hasil hitung hari -->
+        <div id="infoHari" class="mb-6 hidden"></div>
+
+        <!-- Alasan -->
+        <div class="mb-6">
+          <label class="hris-label">Alasan Cuti <span class="text-rose-500">*</span></label>
+          <textarea
+            id="alasan"
+            name="alasan"
+            rows="4"
+            class="hris-input resize-none"
+            placeholder="Isi sesuai alasan yang tertulis di surat cuti agent..."
+            required
+          ></textarea>
+        </div>
+
+        <!-- Upload Surat -->
+        <div class="mb-10">
+          <label class="hris-label">Foto / Scan Surat Cuti</label>
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-3">Opsional — JPG, PNG, PDF. Maks 5MB</p>
+          <input
+            type="file"
+            id="suratCuti"
+            accept="image/jpeg,image/png,application/pdf"
+            class="block w-full text-xs text-slate-500 border border-slate-200 rounded-xl cursor-pointer
+                   file:mr-4 file:py-3 file:px-5 file:border-0
+                   file:text-[10px] file:font-black file:uppercase file:tracking-widest
+                   file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-all bg-slate-50 p-2"
+          >
+        </div>
+
+        <!-- Tombol Aksi -->
+        <div class="flex gap-3 justify-end pt-6 border-t border-slate-100">
+          <a href="/cuti" class="hris-btn-outline px-6">Batal</a>
+          <button
+            type="button"
+            id="btnSubmit"
+            disabled
+            class="hris-btn-primary px-8 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+          >
+            <i data-lucide="save" class="mr-2 w-4 h-4"></i>
+            Simpan Pengajuan
+          </button>
+        </div>
+      </form>
+    </div>
+  <% } %>
+<% } %>
+
+<script>
+(function () {
+  /* ============================================================
+     BAGIAN 1 — LIVE SEARCH KARYAWAN
+     ============================================================ */
+  const searchInput   = document.getElementById('searchInput');
+  const searchResults = document.getElementById('searchResults');
+
+  if (searchInput && searchResults) {
+    searchInput.addEventListener('input', function () {
+      const q = this.value.trim().toLowerCase();
+
+      // Kosongkan & sembunyikan jika query terlalu pendek
+      if (q.length < 2) {
+        searchResults.innerHTML = '';
+        searchResults.classList.add('hidden');
         return;
       }
-      
-      try {
-        const response = await fetch('/api/cuti/hitung', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ tanggalMulai: start, tanggalAkhir: end })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          infoHari.innerHTML = `Estimasi potongan cuti: <span class="text-primary">${data.hari} hari kerja</span>`;
-          btnSubmit.disabled = false;
-        } else {
-          infoHari.innerHTML = `<span class="text-danger">Error menghitung hari</span>`;
-          btnSubmit.disabled = true;
-        }
-      } catch (error) {
-        infoHari.innerHTML = `<span class="text-danger">Terjadi kesalahan sistem</span>`;
-        btnSubmit.disabled = true;
+
+      // Filter dari array yang sudah di-embed server-side
+      const matches = allEmployees.filter(e =>
+        e.namaKaryawan.toLowerCase().includes(q) ||
+        e.nik.toLowerCase().includes(q) ||
+        (e.agent && e.agent.toLowerCase().includes(q))
+      ).slice(0, 20); // Batasi 20 hasil agar tidak terlalu panjang
+
+      if (matches.length === 0) {
+        searchResults.innerHTML = `
+          <div class="px-4 py-8 text-center text-slate-400 text-sm">
+            <i data-lucide="search-x" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+            <p class="font-bold">Karyawan tidak ditemukan</p>
+            <p class="text-xs mt-1">Coba kata kunci lain</p>
+          </div>`;
+        lucide.createIcons({ el: searchResults });
+        searchResults.classList.remove('hidden');
+        return;
       }
-    } else {
-      infoHari.innerHTML = '';
-      btnSubmit.disabled = false;
-    }
-  }
 
-  if (tanggalMulai) tanggalMulai.addEventListener('change', hitungHari);
-  if (tanggalAkhir) tanggalAkhir.addEventListener('change', hitungHari);
+      searchResults.innerHTML = matches.map(e => `
+        <a href="/cuti/form?nik=${encodeURIComponent(e.nik)}"
+           class="flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 transition-colors border-b border-slate-50 last:border-0">
+          <div class="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-700 font-black text-sm shrink-0">
+            ${e.namaKaryawan.charAt(0)}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-slate-800 text-sm truncate">${e.namaKaryawan}</p>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span class="text-[10px] font-black text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded uppercase">${e.nik}</span>
+              <span class="text-[10px] text-slate-400 truncate">${e.agent}</span>
+            </div>
+          </div>
+        </a>
+      `).join('');
 
-  if (formCuti) {
-    formCuti.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const formData = new FormData(formCuti);
-      
-      try {
-        btnSubmit.disabled = true;
-        btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan...';
-        
-        const response = await fetch('/api/cuti/submit', {
-          method: 'POST',
-          body: formData
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          alert('Pengajuan berhasil disimpan!');
-          window.location.href = '/cuti';
-        } else {
-          alert('Gagal: ' + data.message);
-          btnSubmit.disabled = false;
-          btnSubmit.innerHTML = 'Simpan Pengajuan';
-        }
-      } catch (error) {
-        alert('Terjadi kesalahan sistem');
-        btnSubmit.disabled = false;
-        btnSubmit.innerHTML = 'Simpan Pengajuan';
+      searchResults.classList.remove('hidden');
+    });
+
+    // Tutup dropdown saat klik di luar
+    document.addEventListener('click', function (e) {
+      if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+        searchResults.classList.add('hidden');
+      }
+    });
+
+    // Fokus: tampilkan hasil jika sudah ada query
+    searchInput.addEventListener('focus', function () {
+      if (this.value.trim().length >= 2) {
+        this.dispatchEvent(new Event('input'));
       }
     });
   }
+
+  /* ============================================================
+     BAGIAN 2 — LOGIKA FORM PENGAJUAN (hanya jalan jika form ada)
+     ============================================================ */
+  const formEl       = document.getElementById('formCutiInput');
+  if (!formEl) return; // Berhenti jika step masih "pilih" atau quota habis
+
+  const nikKaryawan  = document.getElementById('nikKaryawan').value;
+  const sisaCuti     = <%= quota?.sisaCuti || 0 %>;
+  const elMulai      = document.getElementById('tanggalMulai');
+  const elAkhir      = document.getElementById('tanggalAkhir');
+  const elAlasan     = document.getElementById('alasan');
+  const elInfoHari   = document.getElementById('infoHari');
+  const btnSubmit    = document.getElementById('btnSubmit');
+
+  let jumlahHariValid = false; // Flag hasil hitung API
+
+  /* ---- HELPER: evaluasi apakah tombol boleh aktif ---- */
+  function evaluasiTombol() {
+    const adaMulai  = elMulai.value.trim() !== '';
+    const adaAkhir  = elAkhir.value.trim() !== '';
+    const adaAlasan = elAlasan.value.trim() !== '';
+
+    // Tombol aktif hanya jika: semua field terisi + hari valid
+    if (adaMulai && adaAkhir && adaAlasan && jumlahHariValid) {
+      btnSubmit.disabled = false;
+    } else {
+      btnSubmit.disabled = true;
+    }
+  }
+
+  /* ---- HITUNG HARI KERJA via API ---- */
+  let debounceTimer = null;
+  async function hitungHari() {
+    const mulai = elMulai.value;
+    const akhir = elAkhir.value;
+
+    // Reset flag dulu
+    jumlahHariValid = false;
+    evaluasiTombol();
+
+    if (!mulai || !akhir) return;
+
+    // Validasi urutan tanggal
+    if (akhir < mulai) {
+      tampilInfoHari('error', 'Tanggal akhir tidak boleh sebelum tanggal mulai');
+      return;
+    }
+
+    // Debounce: tunggu 400ms setelah user berhenti mengganti
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+      tampilInfoHari('loading', 'Menghitung hari kerja efektif...');
+      try {
+        const res = await fetch('/api/cuti/hitung', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tanggalMulai: mulai, tanggalAkhir: akhir })
+        });
+        const data = await res.json();
+
+        // Backend mengembalikan { success: true, hari: X }
+        const jumlahHari = data.hari || 0;
+
+        if (!data.success || jumlahHari === 0) {
+          tampilInfoHari('warning', 'Rentang tanggal ini tidak mengandung hari kerja efektif');
+          jumlahHariValid = false;
+        } else if (jumlahHari > sisaCuti) {
+          tampilInfoHari('error', `Butuh <strong>${jumlahHari} hari kerja</strong> — melebihi sisa cuti (${sisaCuti} hari)`);
+          jumlahHariValid = false;
+        } else {
+          tampilInfoHari('success', `<strong>${jumlahHari} hari kerja</strong> — sesuai sisa cuti (${sisaCuti} hari)`);
+          jumlahHariValid = true;
+        }
+      } catch (err) {
+        tampilInfoHari('error', 'Gagal menghitung hari kerja, coba lagi');
+        jumlahHariValid = false;
+      }
+      evaluasiTombol();
+    }, 400);
+  }
+
+  /* ---- HELPER: tampilkan info banner ---- */
+  function tampilInfoHari(type, msg) {
+    const styles = {
+      loading: 'bg-slate-50 border-slate-200 text-slate-500',
+      success: 'bg-emerald-50 border-emerald-200 text-emerald-700',
+      warning: 'bg-yellow-50 border-yellow-200 text-yellow-700',
+      error:   'bg-red-50 border-red-200 text-red-700',
+    };
+    const icons = {
+      loading: 'loader-2',
+      success: 'check-circle-2',
+      warning: 'alert-triangle',
+      error:   'x-circle',
+    };
+
+    elInfoHari.className  = `mb-6 p-4 rounded-xl border flex items-center gap-3 text-sm font-bold transition-all ${styles[type]}`;
+    elInfoHari.innerHTML  = `<i data-lucide="${icons[type]}" class="w-5 h-5 shrink-0 ${type === 'loading' ? 'animate-spin' : ''}"></i><span>${msg}</span>`;
+    elInfoHari.classList.remove('hidden');
+    lucide.createIcons({ el: elInfoHari });
+  }
+
+  /* ---- LISTENER ---- */
+  elMulai.addEventListener('change', hitungHari);
+  elAkhir.addEventListener('change', hitungHari);
+  elAlasan.addEventListener('input', evaluasiTombol);
+
+  /* ---- SUBMIT ---- */
+  btnSubmit.addEventListener('click', async function () {
+    const tanggalMulai = elMulai.value;
+    const tanggalAkhir = elAkhir.value;
+    const alasan       = elAlasan.value.trim();
+    const suratFile    = document.getElementById('suratCuti').files[0];
+
+    if (!tanggalMulai || !tanggalAkhir || !alasan) {
+      tampilInfoHari('warning', 'Tanggal mulai, tanggal akhir, dan alasan wajib diisi');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('nik', nikKaryawan);
+    formData.append('tanggalMulai', tanggalMulai);
+    formData.append('tanggalAkhir', tanggalAkhir);
+    formData.append('alasan', alasan);
+    if (suratFile) formData.append('suratCuti', suratFile);
+
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<i data-lucide="loader-2" class="mr-2 w-4 h-4 animate-spin"></i> Menyimpan...';
+    lucide.createIcons({ el: btnSubmit });
+
+    try {
+      const res  = await fetch('/api/cuti/submit', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (data.success) {
+        // Sukses — redirect ke halaman cuti dengan pesan
+        alert(`✅ Pengajuan berhasil!\nNo: ${data.data.request_no}\nJumlah hari: ${data.data.jumlah_hari} hari`);
+        window.location.href = '/cuti';
+      } else {
+        tampilInfoHari('error', 'Gagal menyimpan: ' + (data.message || 'Terjadi kesalahan'));
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = '<i data-lucide="save" class="mr-2 w-4 h-4"></i> Simpan Pengajuan';
+        lucide.createIcons({ el: btnSubmit });
+        evaluasiTombol();
+      }
+    } catch (err) {
+      tampilInfoHari('error', 'Koneksi bermasalah, coba lagi');
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = '<i data-lucide="save" class="mr-2 w-4 h-4"></i> Simpan Pengajuan';
+      lucide.createIcons({ el: btnSubmit });
+      evaluasiTombol();
+    }
+  });
+})();
 </script>

@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply text-slate-900 font-sans;
+    font-family: 'Poppins', sans-serif;
+    /* Gradasi 3 warna: biru-ungu tipis → abu bersih → putih biru muda */
+    background: linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #f0f4f8 45%,
+      #f7f6ff 100%
+    );
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  /* ── GLASSMORPHISM CARDS ── */
+  .hris-card {
+    @apply bg-white/60 backdrop-blur-2xl rounded-[1.5rem] p-8 border border-white/60 transition-all duration-300;
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.05),
+      0 10px 15px -3px rgba(99, 102, 241, 0.05);
+  }
+
+  .hris-card-header {
+    @apply flex items-center justify-between mb-8;
+  }
+
+  .hris-section-title {
+    @apply text-lg font-bold text-slate-800 tracking-tight;
+  }
+
+  /* ── TABLES ── */
+  .hris-table-container {
+    @apply overflow-hidden rounded-[1.5rem] border border-white/60 bg-white/60 backdrop-blur-2xl;
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.05),
+      0 10px 15px -3px rgba(99, 102, 241, 0.05);
+  }
+
+  .hris-table {
+    @apply w-full text-left border-collapse;
+  }
+
+  .hris-table thead {
+    @apply bg-slate-100 border-b border-slate-200;
+  }
+
+  .hris-table th {
+    @apply px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em];
+  }
+
+  .hris-table td {
+    @apply px-6 py-4 text-sm text-slate-700 border-b border-slate-100;
+  }
+
+  .hris-table tr:last-child td {
+    @apply border-none;
+  }
+
+  .hris-table tr:hover td {
+    @apply bg-indigo-50/40;
+  }
+
+  /* ── FORMS ── */
+  /* Input sekarang punya border yang jelas dan visible */
+  .hris-input {
+    @apply w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800
+           placeholder:text-slate-400
+           focus:bg-white focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500
+           transition-all outline-none;
+  }
+
+  .hris-label {
+    @apply block text-[10px] font-black text-slate-500 uppercase tracking-[0.15em] mb-2 ml-1;
+  }
+
+  /* ── BUTTONS ── */
+  .hris-btn-primary {
+    @apply bg-indigo-600 text-white px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest
+           hover:bg-indigo-700 hover:-translate-y-0.5
+           active:translate-y-0
+           transition-all duration-200;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.30), 0 1px 2px rgba(99, 102, 241, 0.15);
+  }
+
+  .hris-btn-outline {
+    @apply bg-white border-2 border-slate-200 text-slate-600 px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest
+           hover:bg-slate-50 hover:border-slate-300
+           transition-all duration-200;
+  }
+
+  /* ── BADGES ── */
+  .hris-badge {
+    @apply px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider inline-flex items-center justify-center;
+  }
+}
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { @apply bg-slate-300 rounded-full; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { @apply bg-slate-400; }
+}

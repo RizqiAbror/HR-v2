@@ -8,7 +8,8 @@ const {
   cancelCuti,
   hitungHari,
   upload,
-  triggerGenerateKuota
+  triggerGenerateKuota,
+  cutiBersamaMassal
 } = require('../controllers/cutiController');
 
 router.get('/sisa', getSisaCuti);
@@ -23,5 +24,6 @@ router.post('/submit', (req, res, next) => {
 router.patch('/approve/:id', approveCuti);
 router.patch('/cancel/:id', cancelCuti);
 router.post('/generate-kuota', triggerGenerateKuota);
+router.post('/massal', cutiBersamaMassal);
 
 module.exports = router;

@@ -6,135 +6,141 @@
   }
 %>
 
-<nav aria-label="breadcrumb" class="mb-3">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="/cuti">Manajemen Cuti</a></li>
-    <li class="breadcrumb-item active">Riwayat Cuti - <%= employee.namaKaryawan %></li>
-  </ol>
-</nav>
+<div class="flex items-center gap-2 mb-6 text-xs font-bold uppercase tracking-widest text-slate-400">
+  <a href="/cuti" class="hover:text-indigo-600 transition-colors">Manajemen Cuti</a>
+  <i data-lucide="chevron-right" class="w-3 h-3"></i>
+  <span class="text-slate-800">Riwayat <%= employee.namaKaryawan %></span>
+</div>
 
-<!-- A. HEADER INFO KARYAWAN -->
-<div class="card shadow-sm mb-3">
-  <div class="card-body">
-    <div class="row align-items-center">
-      <div class="col-md-6">
-        <h5 class="mb-1 fw-bold"><%= employee.namaKaryawan %></h5>
-        <div class="text-muted small">
-          <span class="me-3"><i class="bi bi-person-badge"></i> <%= employee.nik %></span>
-          <span class="me-3"><i class="bi bi-briefcase"></i> <%= employee.jabatan %></span>
-          <span><i class="bi bi-building"></i> <%= employee.agent ? employee.agent.code : '-' %></span>
+<!-- HEADER INFO & STATS -->
+<div class="hris-card mb-8">
+  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl font-black">
+        <%= employee.namaKaryawan.charAt(0) %>
+      </div>
+      <div>
+        <h2 class="text-xl font-extrabold text-slate-800 tracking-tight"><%= employee.namaKaryawan %></h2>
+        <div class="flex items-center gap-2 mt-1">
+          <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase tracking-wider"><%= employee.nik %></span>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"><%= employee.jabatan %></span>
         </div>
       </div>
-      
-      <% if (quota) { %>
-        <div class="col-md-6 mt-3 mt-md-0 border-start ps-md-4">
-          <% 
-            const percent = (quota.cutiTerpakai / quota.jumlahCuti) * 100;
-            const remainingPercent = 100 - percent;
-            let pColor = 'success';
-            if (remainingPercent < 25) pColor = 'danger';
-            else if (remainingPercent <= 50) pColor = 'warning';
-          %>
-          <div class="d-flex justify-content-between mb-1 small">
-            <span>Terpakai: <strong><%= quota.cutiTerpakai %> hari</strong></span>
-            <span>Sisa: <strong class="text-<%= pColor %>"><%= sisa_cuti %> hari</strong></span>
-            <span class="text-muted">Total: <%= quota.jumlahCuti %> hari</span>
-          </div>
-          <div class="progress" style="height: 10px;">
-            <div class="progress-bar bg-<%= pColor %>" role="progressbar" style="width: <%= percent %>%" aria-valuenow="<%= percent %>" aria-valuemin="0" aria-valuemax="100"></div>
-          </div>
-        </div>
-      <% } else { %>
-        <div class="col-md-6 mt-3 mt-md-0 border-start ps-md-4 d-flex align-items-center">
-          <span class="text-muted small"><i class="bi bi-info-circle me-1"></i> Data kuota tidak ditemukan untuk tahun <%= tahun %></span>
-        </div>
-      <% } %>
     </div>
+
+    <% if (quota) { %>
+      <div class="flex-1 lg:max-w-md">
+        <% 
+          const percent = (quota.cutiTerpakai / quota.jumlahCuti) * 100;
+          const remainingPercent = 100 - percent;
+          let pColorClass = 'bg-emerald-500';
+          let textColorClass = 'text-emerald-600';
+          if (remainingPercent < 25) { pColorClass = 'bg-rose-500'; textColorClass = 'text-rose-600'; }
+          else if (remainingPercent <= 50) { pColorClass = 'bg-amber-500'; textColorClass = 'text-amber-600'; }
+        %>
+        <div class="flex justify-between items-end mb-3">
+          <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Sisa Kuota Tahun <%= tahun %></p>
+            <p class="text-3xl font-black <%= textColorClass %>"><%= sisa_cuti %> <span class="text-xs font-bold text-slate-400 uppercase ml-1">Hari Tersisa</span></p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs font-bold text-slate-700"><%= quota.cutiTerpakai %> / <%= quota.jumlahCuti %></p>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Hari Terpakai</p>
+          </div>
+        </div>
+        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+          <div class="<%= pColorClass %> h-2.5 rounded-full transition-all duration-1000" style="width: <%= percent %>%"></div>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-center gap-3">
+        <i data-lucide="info" class="text-amber-500 w-5 h-5"></i>
+        <p class="text-xs font-medium text-amber-700">Data kuota tidak ditemukan untuk periode tahun <%= tahun %>.</p>
+      </div>
+    <% } %>
   </div>
 </div>
 
-<!-- B. FILTER TAHUN -->
-<div class="mb-3 d-flex justify-content-between align-items-center">
-  <form method="GET" action="/cuti/riwayat/<%= employee.nik %>" class="d-flex align-items-center gap-2">
-    <label for="tahun" class="form-label mb-0 small text-muted">Filter Tahun:</label>
-    <select name="tahun" id="tahun" class="form-select form-select-sm" style="width: auto;">
+<!-- FILTER & TABLE -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+  <form method="GET" action="/cuti/riwayat/<%= employee.nik %>" class="flex items-center gap-3">
+    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Periode:</label>
+    <select name="tahun" class="hris-input py-1.5 px-4 text-xs font-bold w-32 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1rem_1rem] bg-[right_0.5rem_center] bg-no-repeat">
       <option value="2024" <%= tahun === 2024 ? 'selected' : '' %>>2024</option>
       <option value="2025" <%= tahun === 2025 ? 'selected' : '' %>>2025</option>
       <option value="2026" <%= tahun === 2026 ? 'selected' : '' %>>2026</option>
     </select>
-    <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+    <button type="submit" class="hris-btn-primary py-2 px-6 text-xs">Filter</button>
   </form>
 </div>
 
-<!-- C. TABEL RIWAYAT -->
-<div class="card shadow-sm">
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-hover table-striped mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th class="ps-3">No</th>
-            <th>Request No</th>
-            <th>Tgl Pengajuan</th>
-            <th>Tgl Mulai</th>
-            <th>Tgl Akhir</th>
-            <th>Hari</th>
-            <th>Alasan</th>
-            <th>Status</th>
-            <th>Surat</th>
-            <th class="pe-3">Aksi</th>
+<div class="hris-table-container">
+  <table class="hris-table">
+    <thead>
+      <tr>
+        <th class="w-16">No</th>
+        <th>No. Request</th>
+        <th>Pengajuan</th>
+        <th>Masa Cuti</th>
+        <th class="text-center">Hari</th>
+        <th>Status</th>
+        <th class="text-right">Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (requests.length === 0) { %>
+        <tr>
+          <td colspan="7" class="text-center py-20 text-slate-400 italic">Belum ada riwayat pengajuan cuti</td>
+        </tr>
+      <% } else { %>
+        <% requests.forEach((r, idx) => { %>
+          <% 
+            const statusMap = {
+              PENDING_ATASAN: { label:'Menunggu Atasan', cls:'bg-amber-50 text-amber-600' },
+              PENDING_HR:     { label:'Menunggu HR',     cls:'bg-indigo-50 text-indigo-600' },
+              APPROVED:       { label:'Disetujui',       cls:'bg-emerald-50 text-emerald-600' },
+              REJECTED:       { label:'Ditolak',         cls:'bg-rose-50 text-rose-600' },
+              CANCELLED:      { label:'Dibatalkan',      cls:'bg-slate-100 text-slate-500' }
+            };
+            const st = statusMap[r.status] || { label: r.status, cls:'bg-slate-100 text-slate-600' };
+          %>
+          <tr class="group">
+            <td class="text-slate-300 font-bold"><%= idx + 1 %></td>
+            <td><span class="text-xs font-black text-slate-700 tracking-wider"><%= r.requestNo %></span></td>
+            <td><span class="text-xs text-slate-500 font-medium"><%= fmtDate(r.tanggalPengajuan) %></span></td>
+            <td>
+              <div class="flex items-center text-xs font-bold text-slate-700">
+                <%= fmtDate(r.tanggalMulai) %> 
+                <span class="mx-2 text-slate-300">→</span>
+                <%= fmtDate(r.tanggalAkhir) %>
+              </div>
+            </td>
+            <td class="text-center font-black text-slate-800"><%= r.jumlahHari %></td>
+            <td>
+              <span class="hris-badge <%= st.cls %> whitespace-nowrap"><%= st.label %></span>
+            </td>
+            <td class="text-right">
+              <div class="flex justify-end gap-3">
+                <% if (r.attachmentUrl) { %>
+                  <a href="<%= r.attachmentUrl %>" target="_blank" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-400 hover:bg-slate-900 hover:text-white transition-all" title="Lihat Lampiran">
+                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                  </a>
+                <% } %>
+                
+                <% if ((r.status === 'PENDING_ATASAN' || r.status === 'PENDING_HR') && currentUser.nik === employee.nik) { %>
+                  <button onclick="batalkan(<%= r.id %>)" class="hris-btn-outline py-1 px-3 text-[10px] text-rose-500 border-rose-100 hover:bg-rose-50">BATALKAN</button>
+                <% } else if (currentUser.role === 'HR_ADMIN' || currentUser.role === 'ATASAN') { %>
+                  <a href="/cuti/detail/<%= r.id %>" class="hris-btn-primary py-1 px-3 text-[10px]">DETAIL</a>
+                <% } %>
+              </div>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          <% if (requests.length === 0) { %>
-            <tr>
-              <td colspan="10" class="text-center py-4 text-muted">Belum ada riwayat cuti</td>
-            </tr>
-          <% } else { %>
-            <% requests.forEach((r, idx) => { %>
-              <% 
-                const statusMap = {
-                  PENDING_ATASAN: { label:'Menunggu Atasan', cls:'warning text-dark' },
-                  PENDING_HR:     { label:'Menunggu HR',     cls:'info text-dark' },
-                  APPROVED:       { label:'Disetujui',       cls:'success' },
-                  REJECTED:       { label:'Ditolak',         cls:'danger' },
-                  CANCELLED:      { label:'Dibatalkan',      cls:'secondary' }
-                };
-                const st = statusMap[r.status] || { label: r.status, cls:'secondary' };
-              %>
-              <tr>
-                <td class="ps-3"><%= idx + 1 %></td>
-                <td><small><strong><%= r.requestNo %></strong></small></td>
-                <td><small><%= fmtDate(r.tanggalPengajuan) %></small></td>
-                <td><small><%= fmtDate(r.tanggalMulai) %></small></td>
-                <td><small><%= fmtDate(r.tanggalAkhir) %></small></td>
-                <td><%= r.jumlahHari %></td>
-                <td><small class="text-truncate d-inline-block" style="max-width: 150px;" title="<%= r.alasan %>"><%= r.alasan %></small></td>
-                <td><span class="badge bg-<%= st.cls %>"><%= st.label %></span></td>
-                <td>
-                  <% if (r.attachmentUrl) { %>
-                    <a href="<%= r.attachmentUrl %>" target="_blank" class="text-decoration-none small"><i class="bi bi-file-earmark-text"></i> Lihat</a>
-                  <% } else { %>
-                    <span class="text-muted">-</span>
-                  <% } %>
-                </td>
-                <td class="pe-3">
-                  <% if ((r.status === 'PENDING_ATASAN' || r.status === 'PENDING_HR') && currentUser.nik === employee.nik) { %>
-                    <button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size: 0.8rem;" onclick="batalkan(<%= r.id %>)">Batalkan</button>
-                  <% } else if (currentUser.role === 'HR_ADMIN' || currentUser.role === 'ATASAN') { %>
-                    <a href="/cuti/<%= r.id %>" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.8rem;">Detail</a>
-                  <% } %>
-                </td>
-              </tr>
-            <% }) %>
-          <% } %>
-        </tbody>
-      </table>
-    </div>
-  </div>
+        <% }) %>
+      <% } %>
+    </tbody>
+  </table>
 </div>
 
-<!-- D. SCRIPT -->
 <script>
   async function batalkan(id) {
     if (!confirm('Batalkan pengajuan ini?')) return;

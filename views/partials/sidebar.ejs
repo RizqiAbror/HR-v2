@@ -1,66 +1,65 @@
-<div class="brand-wrapper px-4 py-4 d-flex align-items-center">
-  <div class="bg-primary rounded-3 d-flex align-items-center justify-content-center me-3" style="width: 35px; height: 35px;">
-    <i class="bi bi-layers-fill text-white fs-5"></i>
+<div class="flex flex-col h-full py-6">
+  <!-- Brand -->
+  <div class="flex items-center px-6 mb-10">
+    <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
+      <i data-lucide="layers" class="text-white w-5 h-5"></i>
+    </div>
+    <div class="ml-3">
+      <h2 class="text-lg font-extrabold text-slate-800 tracking-tight">HRIS<span class="text-indigo-600">.</span></h2>
+      <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] -mt-1">Premium</p>
+    </div>
   </div>
-  <h5 class="mb-0 fw-bold text-dark" style="letter-spacing: 0.5px;">SKYDASH<span class="text-primary">.</span></h5>
+
+  <!-- Navigation -->
+  <nav class="flex-1 space-y-1 px-3 overflow-y-auto">
+    <!-- Section -->
+    <a href="/" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 <%= typeof pageTitle !== 'undefined' && pageTitle === 'Dashboard' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' %>">
+      <i data-lucide="layout-grid" class="mr-3 w-5 h-5"></i>
+      Dashboard
+    </a>
+
+    <div class="pt-6 pb-2 px-4">
+      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Manajemen</span>
+    </div>
+
+    <a href="/cuti" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 <%= typeof pageTitle !== 'undefined' && pageTitle.includes('Cuti') && !['Rekapitulasi Kuota Cuti', 'Rekap Kuota Cuti'].includes(pageTitle) ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' %>">
+      <i data-lucide="calendar-check" class="mr-3 w-5 h-5"></i>
+      Cuti Karyawan
+    </a>
+
+    <% if (currentUser && currentUser.role === 'HR_ADMIN') { %>
+      <a href="/cuti/rekap" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 <%= typeof pageTitle !== 'undefined' && (pageTitle === 'Rekap Kuota Cuti' || pageTitle === 'Rekapitulasi Kuota Cuti') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' %>">
+        <i data-lucide="pie-chart" class="mr-3 w-5 h-5"></i>
+        Rekap Kuota
+      </a>
+      <a href="/employee" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 <%= typeof pageTitle !== 'undefined' && pageTitle === 'Data Karyawan' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' %>">
+        <i data-lucide="users" class="mr-3 w-5 h-5"></i>
+        Data Karyawan
+      </a>
+      <a href="/agent" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 <%= typeof pageTitle !== 'undefined' && pageTitle === 'Data Agent (Project)' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' %>">
+        <i data-lucide="briefcase" class="mr-3 w-5 h-5"></i>
+        Data Agent
+      </a>
+      <a href="/libur-nasional" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 <%= typeof pageTitle !== 'undefined' && pageTitle === 'Libur Nasional' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' %>">
+        <i data-lucide="calendar-days" class="mr-3 w-5 h-5"></i>
+        Libur Nasional
+      </a>
+
+      <div class="pt-6 pb-2 px-4">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sistem</span>
+      </div>
+      <a href="/audit-trail" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 <%= typeof pageTitle !== 'undefined' && pageTitle.includes('Audit') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' %>">
+        <i data-lucide="activity" class="mr-3 w-5 h-5"></i>
+        Audit Trail
+      </a>
+    <% } %>
+  </nav>
+
+  <!-- Logout -->
+  <div class="px-3 pt-4 border-t border-slate-100">
+    <a href="/logout" class="flex items-center px-4 py-3 text-sm font-medium text-rose-600 rounded-xl hover:bg-rose-50 transition-all duration-200">
+      <i data-lucide="log-out" class="mr-3 w-5 h-5"></i>
+      Logout
+    </a>
+  </div>
 </div>
-
-<ul class="nav flex-column mt-2">
-  <li class="nav-item">
-    <a class="nav-link <%= typeof pageTitle !== 'undefined' && pageTitle === 'Dashboard' ? 'active' : '' %>" href="/">
-      <i class="bi bi-grid-fill"></i>
-      <span>Dashboard</span>
-    </a>
-  </li>
-
-  <p class="text-muted small fw-bold px-4 mt-4 mb-2" style="font-size: 0.65rem; text-transform: uppercase;">Manajemen</p>
-
-  <li class="nav-item">
-    <a class="nav-link <%= typeof pageTitle !== 'undefined' && pageTitle.includes('Cuti') && pageTitle !== 'Rekap Kuota Cuti' && pageTitle !== 'Data Karyawan' ? 'active' : '' %>" href="/cuti">
-      <i class="bi bi-calendar-check"></i>
-      <span>Cuti Karyawan</span>
-    </a>
-  </li>
-
-  <% if (currentUser && currentUser.role === 'HR_ADMIN') { %>
-    <li class="nav-item">
-      <a class="nav-link <%= typeof pageTitle !== 'undefined' && (pageTitle === 'Rekap Kuota Cuti' || pageTitle === 'Rekapitulasi Kuota Cuti') ? 'active' : '' %>" href="/cuti/rekap">
-        <i class="bi bi-pie-chart"></i>
-        <span>Rekap Kuota</span>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link <%= typeof pageTitle !== 'undefined' && pageTitle === 'Data Karyawan' ? 'active' : '' %>" href="/employee">
-        <i class="bi bi-people"></i>
-        <span>Data Karyawan</span>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link <%= typeof pageTitle !== 'undefined' && pageTitle === 'Data Agent (Project)' ? 'active' : '' %>" href="/agent">
-        <i class="bi bi-briefcase"></i>
-        <span>Data Agent</span>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link <%= typeof pageTitle !== 'undefined' && pageTitle === 'Libur Nasional' ? 'active' : '' %>" href="/libur-nasional">
-        <i class="bi bi-calendar3"></i>
-        <span>Libur Nasional</span>
-      </a>
-    </li>
-    
-    <p class="text-muted small fw-bold px-4 mt-4 mb-2" style="font-size: 0.65rem; text-transform: uppercase;">Sistem</p>
-    <li class="nav-item">
-      <a class="nav-link <%= typeof pageTitle !== 'undefined' && pageTitle.includes('Audit') ? 'active' : '' %>" href="/audit-trail">
-        <i class="bi bi-shield-check"></i>
-        <span>Audit Trail</span>
-      </a>
-    </li>
-  <% } %>
-  
-  <li class="nav-item mt-5 pt-4 border-top">
-    <a class="nav-link text-danger" href="/logout">
-      <i class="bi bi-box-arrow-right"></i>
-      <span>Logout</span>
-    </a>
-  </li>
-</ul>

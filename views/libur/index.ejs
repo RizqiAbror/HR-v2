@@ -1,151 +1,120 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <div class="d-flex align-items-center gap-3">
-    <h4 class="mb-0"><%= pageTitle %></h4>
-    <form method="GET" action="/libur-nasional" class="d-flex align-items-center gap-2 m-0">
-      <select name="tahun" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
-        <option value="2024" <%= tahun === 2024 ? 'selected' : '' %>>2024</option>
-        <option value="2025" <%= tahun === 2025 ? 'selected' : '' %>>2025</option>
-        <option value="2026" <%= tahun === 2026 ? 'selected' : '' %>>2026</option>
-      </select>
-    </form>
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+  <div>
+    <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Libur Nasional</h2>
+    <p class="text-slate-500 mt-1 font-medium">Pengaturan hari libur resmi untuk perhitungan jatah cuti otomatis.</p>
   </div>
-  <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambah">
-    <i class="bi bi-plus-circle me-1"></i> Tambah Hari Libur
-  </button>
 </div>
 
-<div class="card shadow-sm">
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-hover mb-0 align-middle">
-        <thead class="table-light">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+  <!-- FORM TAMBAH (Col 4) -->
+  <div class="lg:col-span-4">
+    <div class="hris-card sticky top-8 shadow-2xl shadow-slate-200/50">
+      <h3 class="text-sm font-bold text-slate-800 uppercase tracking-widest mb-6">Tambah Hari Libur</h3>
+      <form id="formLibur" class="space-y-5">
+        <div>
+          <label class="hris-label">Tanggal Libur</label>
+          <input type="date" name="tanggal" class="hris-input" required>
+        </div>
+        <div>
+          <label class="hris-label">Keterangan</label>
+          <input type="text" name="keterangan" class="hris-input" placeholder="Contoh: Idul Fitri" required>
+        </div>
+        <button type="submit" id="btnSave" class="hris-btn-primary w-full py-3 mt-4">
+          <i data-lucide="plus" class="mr-2 w-5 h-5"></i> Simpan Libur
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- DAFTAR LIBUR (Col 8) -->
+  <div class="lg:col-span-8">
+    <div class="hris-table-container">
+      <div class="px-8 py-5 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Daftar Hari Libur Tahun <%= new Date().getFullYear() %></h4>
+      </div>
+      <table class="hris-table">
+        <thead>
           <tr>
-            <th class="ps-4 py-3" width="5%">No</th>
-            <th width="20%">Tanggal</th>
-            <th width="15%">Hari</th>
-            <th width="45%">Keterangan</th>
-            <th class="text-center pe-4" width="15%">Aksi</th>
+            <th class="w-16">No</th>
+            <th>Tanggal</th>
+            <th>Keterangan</th>
+            <th class="text-right">Aksi</th>
           </tr>
         </thead>
         <tbody>
           <% if (holidays.length === 0) { %>
             <tr>
-              <td colspan="5" class="text-center py-4 text-muted">Belum ada data libur nasional di tahun <%= tahun %></td>
+              <td colspan="4" class="text-center py-20 text-slate-400 italic">Belum ada hari libur terdaftar</td>
             </tr>
           <% } else { %>
             <% holidays.forEach((h, idx) => { %>
-              <% 
-                const d = new Date(h.tanggal);
-                const namaHari = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][d.getDay()];
-                const fmtTgl = d.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
-              %>
-              <tr>
-                <td class="ps-4"><%= idx + 1 %></td>
-                <td><strong><%= fmtTgl %></strong></td>
-                <td><span class="badge bg-secondary"><%= namaHari %></span></td>
-                <td><%= h.keterangan %></td>
-                <td class="text-center pe-4">
-                  <button class="btn btn-sm btn-outline-danger" onclick="hapus(<%= h.id %>, '<%= h.keterangan %>')">
-                    <i class="bi bi-trash"></i> Hapus
+              <tr class="group">
+                <td class="text-slate-300 font-bold"><%= idx + 1 %></td>
+                <td>
+                  <div class="flex items-center text-slate-700 font-bold">
+                    <i data-lucide="calendar-days" class="mr-3 text-rose-400 w-5 h-5"></i>
+                    <%= new Date(h.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) %>
+                  </div>
+                </td>
+                <td>
+                  <span class="text-sm text-slate-600 font-medium"><%= h.keterangan %></span>
+                </td>
+                <td class="text-right">
+                  <button onclick="deleteLibur('<%= h.id %>')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all opacity-0 group-hover:opacity-100">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
                   </button>
                 </td>
               </tr>
             <% }) %>
           <% } %>
         </tbody>
-        <tfoot class="table-light">
-          <tr>
-            <td colspan="5" class="text-end pe-4 py-2 text-muted small">
-              Total: <strong><%= holidays.length %></strong> hari libur di tahun ini
-            </td>
-          </tr>
-        </tfoot>
       </table>
     </div>
   </div>
 </div>
 
-<!-- MODAL TAMBAH -->
-<div class="modal fade" id="modalTambah" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Tambah Hari Libur Nasional</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <form id="formTambah">
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">Tanggal Libur</label>
-            <input type="date" name="tanggal" id="inputTanggal" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Keterangan / Nama Libur</label>
-            <input type="text" name="keterangan" id="inputKeterangan" class="form-control" placeholder="Cth: Hari Raya Idul Fitri" required>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary" id="btnSimpan">Simpan Libur</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
 <script>
-  // Script Tambah
-  const formTambah = document.getElementById('formTambah');
-  const btnSimpan = document.getElementById('btnSimpan');
+  const form = document.getElementById('formLibur');
+  const btnSave = document.getElementById('btnSave');
 
-  formTambah.addEventListener('submit', async (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const data = {
-      tanggal: document.getElementById('inputTanggal').value,
-      keterangan: document.getElementById('inputKeterangan').value
-    };
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
 
     try {
-      btnSimpan.disabled = true;
-      btnSimpan.innerHTML = 'Menyimpan...';
-
-      const response = await fetch('/api/libur', {
+      btnSave.disabled = true;
+      btnSave.innerHTML = '<span class="animate-spin inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full mr-2"></span> Menyimpan...';
+      
+      const res = await fetch('/api/libur-nasional', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
 
-      const res = await response.json();
-      if (res.success) {
+      const result = await res.json();
+      if (result.success) {
         window.location.reload();
       } else {
-        alert('Gagal: ' + res.message);
-        btnSimpan.disabled = false;
-        btnSimpan.innerHTML = 'Simpan Libur';
+        alert(result.message);
+        btnSave.disabled = false;
+        btnSave.innerHTML = '<i data-lucide="plus" class="mr-2 w-5 h-5"></i> Simpan Libur';
+        lucide.createIcons();
       }
-    } catch (error) {
-      alert('Terjadi kesalahan sistem');
-      btnSimpan.disabled = false;
-      btnSimpan.innerHTML = 'Simpan Libur';
+    } catch (err) {
+      alert('Gagal menyimpan');
+      btnSave.disabled = false;
+      btnSave.innerHTML = '<i data-lucide="plus" class="mr-2 w-5 h-5"></i> Simpan Libur';
+      lucide.createIcons();
     }
   });
 
-  // Script Hapus
-  async function hapus(id, nama) {
-    if (!confirm('Hapus "' + nama + '" dari daftar libur?')) return;
-
+  async function deleteLibur(id) {
+    if (!confirm('Hapus hari libur ini?')) return;
     try {
-      const response = await fetch('/api/libur/' + id, {
-        method: 'DELETE'
-      });
-      const data = await response.json();
-      if (data.success) {
-        window.location.reload();
-      } else {
-        alert('Gagal menghapus: ' + data.message);
-      }
-    } catch (error) {
-      alert('Terjadi kesalahan saat menghapus');
-    }
+      const res = await fetch(`/api/libur-nasional/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) window.location.reload();
+    } catch (err) { alert('Gagal menghapus'); }
   }
 </script>

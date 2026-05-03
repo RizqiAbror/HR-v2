@@ -1,228 +1,143 @@
-<%
-  function fmtDate(d) {
-    if (!d) return '-';
-    const dd = new Date(d);
-    return dd.toLocaleDateString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric' });
-  }
-  function fmtDateTime(d) {
-    if (!d) return '-';
-    const dd = new Date(d);
-    return dd.toLocaleDateString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric' })
-           + ' ' + dd.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
-  }
-  const statusMap = {
-    PENDING_ATASAN: { label:'Menunggu Atasan', cls:'warning text-dark' },
-    PENDING_HR:     { label:'Menunggu HR',     cls:'info text-dark' },
-    APPROVED:       { label:'Disetujui',       cls:'success' },
-    REJECTED:       { label:'Ditolak',         cls:'danger' },
-    CANCELLED:      { label:'Dibatalkan',      cls:'secondary' }
-  };
-  const st = statusMap[request.status] || { label: request.status, cls:'secondary' };
-%>
-
-<!-- BREADCRUMB -->
-<nav aria-label="breadcrumb" class="mb-3">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="/cuti">Manajemen Cuti</a></li>
-    <li class="breadcrumb-item active">Detail Pengajuan #<%= request.requestNo %></li>
-  </ol>
-</nav>
-
-<div class="row g-4">
-  <!-- ── KOLOM KIRI ── -->
-  <div class="col-md-7">
-    <div class="card shadow-sm h-100">
-      <div class="card-header bg-white py-3">
-        <h5 class="mb-0">Informasi Pengajuan</h5>
-      </div>
-      <div class="card-body p-0">
-        <table class="table table-borderless mb-0">
-          <tbody>
-            <tr><th class="ps-4 text-muted fw-normal" style="width:38%">Request No</th><td><strong><%= request.requestNo %></strong></td></tr>
-            <tr><th class="ps-4 text-muted fw-normal">NIK</th><td><%= request.nik %></td></tr>
-            <tr><th class="ps-4 text-muted fw-normal">Nama Karyawan</th><td><%= request.employee.namaKaryawan %></td></tr>
-            <tr><th class="ps-4 text-muted fw-normal">Jabatan</th><td><%= request.employee.jabatan %></td></tr>
-            <tr><th class="ps-4 text-muted fw-normal">Tanggal Mulai</th><td><%= fmtDate(request.tanggalMulai) %></td></tr>
-            <tr><th class="ps-4 text-muted fw-normal">Tanggal Akhir</th><td><%= fmtDate(request.tanggalAkhir) %></td></tr>
-            <tr><th class="ps-4 text-muted fw-normal">Jumlah Hari</th><td><strong><%= request.jumlahHari %> hari</strong></td></tr>
-            <tr><th class="ps-4 text-muted fw-normal">Alasan</th><td><%= request.alasan %></td></tr>
-            <tr>
-              <th class="ps-4 text-muted fw-normal">Status</th>
-              <td><span class="badge bg-<%= st.cls %>"><%= st.label %></span></td>
-            </tr>
-            <tr><th class="ps-4 text-muted fw-normal">Diajukan</th><td><%= fmtDateTime(request.tanggalPengajuan) %></td></tr>
-          </tbody>
-        </table>
-      </div>
+<div class="max-w-4xl mx-auto">
+  <div class="flex items-center gap-4 mb-8">
+    <a href="/cuti" class="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 transition-all shadow-sm">
+      <i data-lucide="arrow-left" class="w-5 h-5"></i>
+    </a>
+    <div>
+      <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight">Detail Pengajuan Cuti</h2>
+      <p class="text-sm text-slate-500 font-medium">Tinjau permohonan sebelum mengambil keputusan.</p>
     </div>
   </div>
 
-  <!-- ── KOLOM KANAN ── -->
-  <div class="col-md-5 d-flex flex-column gap-3">
-
-    <!-- Card 1: Persetujuan Atasan -->
-    <div class="card shadow-sm">
-      <div class="card-header bg-white py-2"><h6 class="mb-0">Persetujuan Atasan</h6></div>
-      <div class="card-body">
-        <% if (request.approvedByAtasan) { %>
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <span class="badge bg-success">APPROVED</span>
-            <small class="text-muted"><%= fmtDateTime(request.approvedAtAtasan) %></small>
-          </div>
-          <p class="mb-1"><strong>Oleh:</strong> <%= request.approvedByAtasan %></p>
-          <% if (request.catatanAtasan) { %>
-            <p class="mb-0 text-muted small"><strong>Catatan:</strong> <%= request.catatanAtasan %></p>
-          <% } %>
-        <% } else { %>
-          <span class="badge bg-warning text-dark">Menunggu</span>
-        <% } %>
-      </div>
-    </div>
-
-    <!-- Card 2: Persetujuan HR -->
-    <div class="card shadow-sm">
-      <div class="card-header bg-white py-2"><h6 class="mb-0">Persetujuan HR</h6></div>
-      <div class="card-body">
-        <% if (request.approvedByHr) { %>
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <span class="badge bg-success">APPROVED</span>
-            <small class="text-muted"><%= fmtDateTime(request.approvedAtHr) %></small>
-          </div>
-          <p class="mb-1"><strong>Oleh:</strong> <%= request.approvedByHr %></p>
-          <% if (request.catatanHr) { %>
-            <p class="mb-0 text-muted small"><strong>Catatan:</strong> <%= request.catatanHr %></p>
-          <% } %>
-        <% } else { %>
-          <span class="badge bg-secondary">Menunggu</span>
-        <% } %>
-      </div>
-    </div>
-
-    <!-- Card 3: Upload Surat Cuti -->
-    <div class="card shadow-sm">
-      <div class="card-header bg-white py-2"><h6 class="mb-0">Upload Surat Cuti</h6></div>
-      <div class="card-body">
-        <% if (request.attachmentUrl) { %>
-          <div class="mb-3">
-            <a href="<%= request.attachmentUrl %>" target="_blank" class="btn btn-sm btn-outline-success">
-              <i class="bi bi-file-earmark-check me-1"></i> Lihat Surat
-            </a>
-            <small class="text-muted ms-2">Upload ulang:</small>
-          </div>
-        <% } else { %>
-          <p class="text-muted small mb-2">Belum ada surat yang diupload.</p>
-        <% } %>
-        <div class="mb-2">
-          <input type="file" class="form-control form-control-sm" id="fileSurat" accept="image/*,.pdf">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <!-- INFO KARYAWAN (Col 4) -->
+    <div class="lg:col-span-4 space-y-6">
+      <div class="hris-card bg-indigo-600 text-white border-none shadow-xl shadow-indigo-100">
+        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-2xl font-black mb-4">
+          <%= req.employee.namaKaryawan.charAt(0) %>
         </div>
-        <button type="button" class="btn btn-outline-primary btn-sm" id="btnUpload">
-          <i class="bi bi-upload me-1"></i> Upload Surat
-        </button>
+        <h3 class="text-xl font-black leading-tight"><%= req.employee.namaKaryawan %></h3>
+        <p class="text-xs text-indigo-100 font-bold uppercase tracking-wider mt-1"><%= req.employee.nik %></p>
+        <div class="mt-6 pt-6 border-t border-white/10 space-y-3">
+          <div class="flex justify-between text-xs">
+            <span class="opacity-60">Agent</span>
+            <span class="font-bold"><%= req.employee.agent ? req.employee.agent.name : '-' %></span>
+          </div>
+          <div class="flex justify-between text-xs">
+            <span class="opacity-60">Jabatan</span>
+            <span class="font-bold"><%= req.employee.jabatan %></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hris-card">
+        <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Saldo Cuti Saat Ini</h4>
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+          <p class="text-[10px] font-bold text-slate-400 uppercase">Sisa Tahun <%= req.quota.tahun %></p>
+          <p class="text-3xl font-black text-indigo-600 mt-1"><%= (req.quota.jumlahCuti - req.quota.cutiTerpakai) %> Hari</p>
+        </div>
       </div>
     </div>
 
-  </div><!-- end kolom kanan -->
+    <!-- DETAIL PENGAJUAN (Col 8) -->
+    <div class="lg:col-span-8">
+      <div class="hris-card shadow-2xl shadow-slate-200/50">
+        <div class="flex items-center justify-between mb-8">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <i data-lucide="file-text" class="w-4 h-4"></i>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-widest">Informasi Pengajuan</h3>
+          </div>
+          <% 
+            let statusClass = "bg-amber-50 text-amber-600";
+            if(req.status === 'APPROVED') statusClass = "bg-emerald-50 text-emerald-600";
+            if(req.status === 'REJECTED') statusClass = "bg-rose-50 text-rose-600";
+          %>
+          <span class="hris-badge <%= statusClass %>"><%= req.status.replace('PENDING_', '') %></span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-8 mb-10">
+          <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tanggal Mulai</p>
+            <p class="text-sm font-bold text-slate-700 flex items-center"><i data-lucide="calendar-check" class="mr-2 text-indigo-400 w-4 h-4"></i> <%= new Date(req.startDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) %></p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tanggal Selesai</p>
+            <p class="text-sm font-bold text-slate-700 flex items-center"><i data-lucide="calendar-x" class="mr-2 text-rose-400 w-4 h-4"></i> <%= new Date(req.endDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) %></p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Durasi</p>
+            <p class="text-lg font-black text-slate-800"><%= req.lamaCuti %> Hari Kerja</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Jenis Cuti</p>
+            <p class="text-sm font-bold text-indigo-600 px-3 py-1 bg-indigo-50 rounded-lg w-fit mt-1"><%= req.jenisCuti %></p>
+          </div>
+        </div>
+
+        <div class="mb-10">
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Alasan Pengajuan</p>
+          <div class="p-5 bg-slate-50 rounded-2xl text-sm text-slate-600 italic leading-relaxed border border-slate-100">
+            "<%= req.alasan %>"
+          </div>
+        </div>
+
+        <% if (req.attachmentUrl) { %>
+          <div class="mb-10">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Lampiran Pendukung</p>
+            <a href="<%= req.attachmentUrl %>" target="_blank" class="inline-flex items-center px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-indigo-600 transition-all">
+              <i data-lucide="file-text" class="mr-2 text-rose-400 w-4 h-4"></i> Lihat Lampiran
+            </a>
+          </div>
+        <% } %>
+
+        <!-- ADMIN ACTIONS -->
+        <% if (currentUser.role === 'HR_ADMIN' && req.status === 'PENDING_HR') { %>
+          <div class="pt-10 border-t border-slate-100 mt-10">
+            <p class="text-center text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Keputusan Persetujuan HR</p>
+            <div class="flex flex-col sm:flex-row gap-4">
+              <button onclick="updateStatus('<%= req.id %>', 'REJECT')" class="flex-1 bg-rose-50 text-rose-600 font-black py-4 rounded-2xl hover:bg-rose-100 transition-all flex items-center justify-center border border-rose-100">
+                <i data-lucide="x-circle" class="mr-2 w-5 h-5"></i> TOLAK PENGAJUAN
+              </button>
+              <button onclick="updateStatus('<%= req.id %>', 'APPROVE')" class="flex-1 bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-emerald-100 hover:bg-emerald-700 hover:-translate-y-1 transition-all flex items-center justify-center">
+                <i data-lucide="check-circle-2" class="mr-2 w-5 h-5"></i> SETUJUI CUTI
+              </button>
+            </div>
+          </div>
+        <% } else if (currentUser.role === 'HR_ADMIN' && req.status === 'PENDING_ATASAN') { %>
+           <div class="pt-10 border-t border-slate-100 mt-10">
+            <div class="bg-amber-50 border border-amber-100 p-4 rounded-xl flex items-center gap-3">
+              <i data-lucide="clock" class="text-amber-500 w-5 h-5"></i>
+              <p class="text-sm font-bold text-amber-700">Menunggu Persetujuan Atasan</p>
+            </div>
+           </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- ── ACTION BUTTONS ── -->
-<div class="mt-4 d-flex gap-2">
-  <a href="/cuti" class="btn btn-outline-secondary">
-    <i class="bi bi-arrow-left me-1"></i> Kembali
-  </a>
-  <% if (request.status === 'PENDING_HR') { %>
-    <button type="button" class="btn btn-success" id="btnApprove">&#10003; Setujui (Final)</button>
-    <button type="button" class="btn btn-danger"  id="btnReject">&#10007; Tolak</button>
-  <% } else if (request.status === 'PENDING_ATASAN') { %>
-    <button type="button" class="btn btn-warning" id="btnApproveAtasan">&#10003; Setujui (Simulasi Atasan)</button>
-    <button type="button" class="btn btn-danger"  id="btnReject">&#10007; Tolak</button>
-  <% } %>
-</div>
-
-<!-- ── SCRIPT: semua kondisi dihandle via JS murni, TANPA EJS di dalam script ── -->
 <script>
-  const reqId         = <%= request.id %>;
-  const requestStatus = '<%= request.status %>';
-
-  // ── Upload Surat ──
-  document.getElementById('btnUpload').addEventListener('click', async () => {
-    const fileInput = document.getElementById('fileSurat');
-    if (!fileInput.files.length) { alert('Pilih file terlebih dahulu.'); return; }
-
-    const formData = new FormData();
-    formData.append('surat', fileInput.files[0]);
+  async function updateStatus(id, action) {
+    const confirmMsg = action === 'APPROVE' ? 'Setujui pengajuan cuti ini?' : 'Tolak pengajuan cuti ini?';
+    if (!confirm(confirmMsg)) return;
 
     try {
-      const res  = await fetch('/api/cuti/upload-surat/' + reqId, { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.success) { alert('Surat berhasil diupload!'); window.location.reload(); }
-      else              { alert('Gagal upload: ' + data.message); }
-    } catch (e) {
-      alert('Koneksi bermasalah saat upload.');
+      const response = await fetch(`/api/cuti/approve/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: action, approvedBy: '<%= currentUser.nama %>' })
+      });
+
+      const res = await response.json();
+      if (res.success) {
+        window.location.href = '/cuti';
+      } else {
+        alert('Gagal: ' + res.message);
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan sistem');
     }
-  });
-
-  // ── Approve HR Final ──
-  const btnApprove = document.getElementById('btnApprove');
-  if (btnApprove) {
-    btnApprove.addEventListener('click', async () => {
-      if (!confirm('Setujui pengajuan ini secara final?')) return;
-      try {
-        const res  = await fetch('/api/cuti/approve/' + reqId, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'APPROVE', role: 'HR', approvedBy: 'HR_ADMIN', catatan: 'Disetujui' })
-        });
-        const data = await res.json();
-        if (data.success) { alert('Pengajuan disetujui!'); window.location.href = '/cuti'; }
-        else              { alert('Gagal: ' + data.message); }
-      } catch (e) {
-        alert('Koneksi bermasalah.');
-      }
-    });
-  }
-
-  // ── Approve Simulasi Atasan ──
-  const btnApproveAtasan = document.getElementById('btnApproveAtasan');
-  if (btnApproveAtasan) {
-    btnApproveAtasan.addEventListener('click', async () => {
-      if (!confirm('Setujui sebagai Atasan? (Status akan berubah ke PENDING_HR)')) return;
-      try {
-        const res  = await fetch('/api/cuti/approve/' + reqId, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'APPROVE', role: 'ATASAN', approvedBy: 'ATASAN_TEST', catatan: 'Oke lanjut ke HR' })
-        });
-        const data = await res.json();
-        if (data.success) { alert('Berhasil disetujui Atasan!'); window.location.reload(); }
-        else              { alert('Gagal: ' + data.message); }
-      } catch (e) {
-        alert('Koneksi bermasalah.');
-      }
-    });
-  }
-
-  // ── Reject (HR atau Atasan) ──
-  const btnReject = document.getElementById('btnReject');
-  if (btnReject) {
-    btnReject.addEventListener('click', async () => {
-      const catatan = prompt('Alasan penolakan:');
-      if (!catatan || !catatan.trim()) return;
-
-      const role = requestStatus === 'PENDING_ATASAN' ? 'ATASAN' : 'HR';
-      const approvedBy = requestStatus === 'PENDING_ATASAN' ? 'ATASAN_TEST' : 'HR_ADMIN';
-
-      try {
-        const res  = await fetch('/api/cuti/approve/' + reqId, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'REJECT', role, approvedBy, catatan })
-        });
-        const data = await res.json();
-        if (data.success) { alert('Pengajuan ditolak.'); window.location.href = '/cuti'; }
-        else              { alert('Gagal: ' + data.message); }
-      } catch (e) {
-        alert('Koneksi bermasalah.');
-      }
-    });
   }
 </script>

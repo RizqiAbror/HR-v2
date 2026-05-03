@@ -325,6 +325,94 @@ const triggerGenerateKuota = async (req, res) => {
   }
 };
 
+const cutiBersamaMassal = async (req, res) => {
+  try {
+    const { tanggalMulai, tanggalAkhir, keterangan } = req.body;
+    
+    if (!tanggalMulai || !tanggalAkhir || !keterangan) {
+      return res.status(400).json({ success: false, message: 'Tanggal dan keterangan wajib diisi' });
+    }
+
+    const start = new Date(tanggalMulai);
+    const end = new Date(tanggalAkhir);
+    const tahun = start.getFullYear();
+
+    const jumlahHari = await hitungHariCuti(start, end, prisma);
+
+    if (jumlahHari <= 0) {
+      return res.status(400).json({ success: false, message: 'Tidak ada hari kerja efektif untuk dipotong' });
+    }
+
+    const employees = await prisma.employee.findMany({
+      where: { statusKaryawan: 'ACTIVE' },
+      select: { nik: true }
+    });
+
+    let berhasil = 0;
+    let gagal = 0;
+
+    for (const emp of employees) {
+      try {
+        await prisma.$transaction(async (tx) => {
+          const quota = await tx.leaveQuota.findUnique({
+            where: { nik_tahun: { nik: emp.nik, tahun: tahun } }
+          });
+
+          if (!quota) throw new Error('Kuota tidak ditemukan');
+          
+          if (quota.cutiTerpakai + jumlahHari > quota.jumlahCuti) {
+            throw new Error('Sisa cuti tidak cukup');
+          }
+
+          const randomDigits = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+          const requestNo = `CB-${tahun}-${randomDigits}-${emp.nik.slice(-3)}`;
+
+          const newRequest = await tx.leaveRequest.create({
+            data: {
+              requestNo,
+              nik: emp.nik,
+              quotaId: quota.id,
+              tanggalMulai: start,
+              tanggalAkhir: end,
+              jumlahHari,
+              alasan: `[CUTI BERSAMA] ${keterangan}`,
+              status: 'APPROVED',
+              approvedByHr: 'SYSTEM_MASSAL',
+              approvedAtHr: new Date()
+            }
+          });
+
+          await tx.leaveQuota.update({
+            where: { id: quota.id },
+            data: { cutiTerpakai: { increment: jumlahHari } }
+          });
+
+          await logAudit(tx, {
+            nik: emp.nik,
+            tableName: 'leave_requests',
+            action: 'CREATE_MASSAL',
+            oldData: null,
+            newData: newRequest,
+            changedBy: 'HR_ADMIN'
+          });
+        });
+        berhasil++;
+      } catch (err) {
+        gagal++;
+        console.error(`Gagal potong cuti bersama untuk ${emp.nik}:`, err.message);
+      }
+    }
+
+    return res.json({ 
+      success: true, 
+      message: `Eksekusi Cuti Bersama selesai. Berhasil: ${berhasil}, Gagal/Skip: ${gagal}`,
+      data: { berhasil, gagal }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Terjadi kesalahan server', error: error.message });
+  }
+};
+
 module.exports = {
   getSisaCuti,
   getRiwayatCuti,
@@ -333,5 +421,6 @@ module.exports = {
   cancelCuti,
   hitungHari,
   upload,
-  triggerGenerateKuota
+  triggerGenerateKuota,
+  cutiBersamaMassal
 };

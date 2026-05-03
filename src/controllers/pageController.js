@@ -21,24 +21,21 @@ const showDashboard = async (req, res) => {
 const showCutiIndex = async (req, res) => {
   try {
     const currentYear = new Date().getFullYear();
-    
+    const filterStatus = req.query.status || ''; // '' = semua
+
+    const whereClause = filterStatus
+      ? { status: filterStatus }
+      : {}; // Tampilkan semua status
+
     const requests = await prisma.leaveRequest.findMany({
-      where: {
-        status: {
-          in: ['PENDING_ATASAN', 'PENDING_HR']
-        }
-      },
+      where: whereClause,
       include: {
         employee: {
-          select: { nik: true, namaKaryawan: true }
-        },
-        quota: {
-          select: { tahun: true }
+          select: { nik: true, namaKaryawan: true, jabatan: true, agent: { select: { name: true } } }
         }
       },
-      orderBy: {
-        tanggalPengajuan: 'desc'
-      }
+      orderBy: { tanggalPengajuan: 'desc' },
+      take: 50 // Batasi 50 terbaru agar tidak lambat
     });
 
     const statusCounts = await prisma.leaveRequest.groupBy({
@@ -49,28 +46,25 @@ const showCutiIndex = async (req, res) => {
           lte: new Date(`${currentYear}-12-31`)
         }
       },
-      _count: {
-        id: true
-      }
+      _count: { id: true }
     });
 
-    let totalPending = 0;
-    let totalApproved = 0;
-    let totalRejected = 0;
-
+    let totalPending = 0, totalApproved = 0, totalRejected = 0;
     statusCounts.forEach(stat => {
-      if (stat.status === 'PENDING_ATASAN' || stat.status === 'PENDING_HR') {
-        totalPending += stat._count.id;
-      } else if (stat.status === 'APPROVED') {
-        totalApproved += stat._count.id;
-      } else if (stat.status === 'REJECTED') {
-        totalRejected += stat._count.id;
-      }
+      if (stat.status === 'PENDING_ATASAN' || stat.status === 'PENDING_HR') totalPending += stat._count.id;
+      else if (stat.status === 'APPROVED') totalApproved += stat._count.id;
+      else if (stat.status === 'REJECTED') totalRejected += stat._count.id;
     });
 
     const stats = { totalPending, totalApproved, totalRejected };
 
-    res.render('cuti/index', { pageTitle: 'Manajemen Cuti', requests, stats });
+    res.render('cuti/index', { 
+      pageTitle: 'Manajemen Cuti', 
+      requests, 
+      stats,
+      filterStatus,
+      currentUser: req.session.user
+    });
   } catch (error) {
     res.status(500).send('Server error: ' + error.message);
   }
@@ -78,6 +72,7 @@ const showCutiIndex = async (req, res) => {
 
 const showCutiForm = async (req, res) => {
   try {
+    const currentUser = req.session.user;
     const nik = req.query.nik;
 
     const employees = await prisma.employee.findMany({
@@ -85,26 +80,24 @@ const showCutiForm = async (req, res) => {
       include: { agent: true }
     });
 
+    const tahun = new Date().getFullYear();
     let selectedEmployee = null;
     let quota = null;
-    const tahun = new Date().getFullYear();
+    let step = 'pilih';
 
     if (nik) {
       selectedEmployee = employees.find(e => e.nik === nik);
       if (selectedEmployee) {
+        step = 'input';
         const quotaDb = await prisma.leaveQuota.findUnique({
-          where: {
-            nik_tahun: {
-              nik: nik,
-              tahun: tahun
-            }
-          }
+          where: { nik_tahun: { nik: nik, tahun: tahun } }
         });
+        
         if (quotaDb) {
           quota = {
-            jumlah_cuti: quotaDb.jumlahCuti,
-            cuti_terpakai: quotaDb.cutiTerpakai,
-            sisa_cuti: quotaDb.jumlahCuti - quotaDb.cutiTerpakai
+            jumlahCuti: quotaDb.jumlahCuti,
+            cutiTerpakai: quotaDb.cutiTerpakai,
+            sisaCuti: quotaDb.jumlahCuti - quotaDb.cutiTerpakai
           };
         }
       }
@@ -112,10 +105,12 @@ const showCutiForm = async (req, res) => {
 
     res.render('cuti/form', { 
       pageTitle: 'Input Pengajuan Cuti', 
+      step,
       employees, 
       selectedEmployee, 
       quota, 
-      tahun 
+      tahun,
+      currentUser: req.session.user
     });
   } catch (error) {
     res.status(500).send('Server error: ' + error.message);
@@ -135,7 +130,7 @@ const showCutiDetail = async (req, res) => {
       include: {
         employee: true,
         quota: {
-          select: { tahun: true, jumlahCuti: true }
+          select: { tahun: true, jumlahCuti: true, cutiTerpakai: true }
         }
       }
     });
@@ -144,7 +139,7 @@ const showCutiDetail = async (req, res) => {
       return res.status(404).send('Pengajuan tidak ditemukan');
     }
 
-    res.render('cuti/detail', { pageTitle: 'Detail Pengajuan', request });
+    res.render('cuti/detail', { pageTitle: 'Detail Pengajuan', req: request });
   } catch (error) {
     res.status(500).send('Server error: ' + error.message);
   }
@@ -193,11 +188,12 @@ const showCutiRekap = async (req, res) => {
     }));
 
     res.render('cuti/rekap', { 
-      pageTitle: 'Rekap Kuota Cuti', 
+      pageTitle: 'Rekapitulasi Kuota Cuti', 
       quotas: formattedQuotas, 
       agents, 
-      tahun, 
-      agentCode 
+      year: tahun, 
+      agentCode,
+      search: req.query.search || ''
     });
   } catch (error) {
     res.status(500).send('Server error: ' + error.message);

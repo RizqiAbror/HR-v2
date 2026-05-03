@@ -12,7 +12,7 @@ router.get('/cuti', isLoggedIn, isHRAdmin, showCutiIndex);
 router.get('/cuti/form', isLoggedIn, isHRAdmin, showCutiForm);   // HARUS di atas /cuti/:id
 router.get('/cuti/rekap', isLoggedIn, isHRAdmin, showCutiRekap); // HARUS di atas /cuti/:id
 router.get('/cuti/riwayat/:nik', isLoggedIn, isHRAdmin, showRiwayatCuti); // HARUS di atas /cuti/:id
-router.get('/cuti/:id', isLoggedIn, isHRAdmin, showCutiDetail);
+router.get('/cuti/detail/:id', isLoggedIn, isHRAdmin, showCutiDetail);
 
 // ── EMPLOYEE PAGES ──
 router.get('/employee', isLoggedIn, isHRAdmin, showEmployeeIndex);

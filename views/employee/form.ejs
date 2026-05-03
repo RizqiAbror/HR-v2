@@ -1,159 +1,118 @@
-<div class="row justify-content-center">
-  <div class="col-md-10">
-    <div class="card shadow-sm">
-      <div class="card-header bg-white py-3">
-        <h5 class="mb-0"><%= pageTitle %></h5>
-      </div>
-      <div class="card-body">
-        <form id="formEmployee">
-          <div class="row g-3">
-            
-            <!-- DATA PEKERJAAN -->
-            <div class="col-12"><h6 class="text-primary border-bottom pb-1">Data Pekerjaan & Agent</h6></div>
-            
-            <div class="col-md-6">
-              <label class="form-label">Agent (Project)</label>
-              <select name="agentId" id="agentId" class="form-select" required>
-                <option value="">-- Pilih Agent --</option>
-                <% agents.forEach(a => { %>
-                  <option value="<%= a.id %>" <%= employee && employee.agentId === a.id ? 'selected' : '' %>><%= a.name %></option>
-                <% }) %>
-              </select>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label d-flex justify-content-between">
-                <span>NIK (Natural Key)</span>
-                <% if (mode === 'create') { %>
-                  <span class="badge bg-success align-self-center" style="font-size: 0.65rem;">Auto-Generate Active</span>
-                <% } %>
-              </label>
-              <input type="text" name="nik" id="nikInput" class="form-control" placeholder="Pilih Agent dan Joint Date untuk Generate" value="<%= employee ? employee.nik : '' %>" <%= mode === 'edit' ? 'readonly' : '' %> required>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Jabatan</label>
-              <input type="text" name="jabatan" class="form-control" value="<%= employee ? employee.jabatan : '' %>" required>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Level</label>
-              <select name="level" class="form-select" required>
-                <% ['Staff', 'Supervisor A', 'Supervisor B', 'Manager A', 'Manager B', 'Manager C', 'BOD'].forEach(l => { %>
-                  <option value="<%= l %>" <%= employee && employee.level === l ? 'selected' : '' %>><%= l %></option>
-                <% }) %>
-              </select>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Status TK</label>
-              <select name="statusTk" class="form-select" required>
-                <option value="PKWT" <%= employee && employee.statusTk === 'PKWT' ? 'selected' : '' %>>PKWT</option>
-                <option value="PKM" <%= employee && employee.statusTk === 'PKM' ? 'selected' : '' %>>PKM</option>
-              </select>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Status Karyawan</label>
-              <select name="statusKaryawan" class="form-select" required>
-                <option value="ACTIVE" <%= employee && employee.statusKaryawan === 'ACTIVE' ? 'selected' : '' %>>ACTIVE</option>
-                <option value="INACTIVE" <%= employee && employee.statusKaryawan === 'INACTIVE' ? 'selected' : '' %>>INACTIVE</option>
-              </select>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Joint Date</label>
-              <input type="date" name="jointDate" id="jointDate" class="form-control" value="<%= employee ? new Date(employee.jointDate).toISOString().split('T')[0] : '' %>" required>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">End Date (Opsional)</label>
-              <input type="date" name="endDate" class="form-control" value="<%= employee && employee.endDate ? new Date(employee.endDate).toISOString().split('T')[0] : '' %>">
-            </div>
-
-            <!-- DATA PERSONAL -->
-            <div class="col-12 mt-4"><h6 class="text-primary border-bottom pb-1">Data Personal</h6></div>
-
-            <div class="col-md-6">
-              <label class="form-label">Nama Karyawan</label>
-              <input type="text" name="namaKaryawan" class="form-control" value="<%= employee ? employee.namaKaryawan : '' %>" required>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Nomor KTP</label>
-              <input type="text" name="nomorKtp" class="form-control" value="<%= employee ? employee.nomorKtp : '' %>">
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">NPWP</label>
-              <input type="text" name="npwp" class="form-control" value="<%= employee ? employee.npwp : '' %>">
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Status Perkawinan</label>
-              <select name="statusPerkawinan" class="form-select">
-                <% ['TK/0', 'K/0', 'K/1', 'K/2', 'K/3'].forEach(s => { %>
-                  <option value="<%= s %>" <%= employee && employee.statusPerkawinan === s ? 'selected' : '' %>><%= s %></option>
-                <% }) %>
-              </select>
-            </div>
-
-            <!-- KONTAK & ATASAN -->
-            <div class="col-12 mt-4"><h6 class="text-primary border-bottom pb-1">Kontak & Atasan</h6></div>
-
-            <div class="col-md-6">
-              <label class="form-label">Email Kantor</label>
-              <input type="email" name="emailKantor" class="form-control" value="<%= employee ? employee.emailKantor : '' %>" required>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Email Pribadi</label>
-              <input type="email" name="emailPribadi" class="form-control" value="<%= employee ? employee.emailPribadi : '' %>">
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Nama Atasan</label>
-              <input type="text" name="namaAtasan" class="form-control" value="<%= employee ? employee.namaAtasan : '' %>">
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Email Atasan</label>
-              <input type="email" name="emailAtasan" class="form-control" value="<%= employee ? employee.emailAtasan : '' %>">
-            </div>
-
-            <!-- PAYROLL & BANK -->
-            <div class="col-12 mt-4"><h6 class="text-primary border-bottom pb-1">Payroll & Rekening Bank</h6></div>
-
-            <div class="col-md-6">
-              <label class="form-label">Gaji Pokok</label>
-              <input type="number" name="gajiPokok" class="form-control" value="<%= employee ? employee.gajiPokok : 0 %>">
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Nama Bank</label>
-              <input type="text" name="namaBank" class="form-control" value="<%= employee ? employee.namaBank : '' %>">
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">No Rekening</label>
-              <input type="text" name="noRekening" class="form-control" value="<%= employee ? employee.noRekening : '' %>">
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Nama Rekening</label>
-              <input type="text" name="namaRekening" class="form-control" value="<%= employee ? employee.namaRekening : '' %>">
-            </div>
-
-          </div>
-
-          <hr class="my-4">
-          <div class="d-flex justify-content-between">
-            <a href="/employee" class="btn btn-secondary">Batal</a>
-            <button type="submit" id="btnSubmit" class="btn btn-primary px-4">Simpan Perubahan</button>
-          </div>
-        </form>
-      </div>
+<div class="max-w-5xl mx-auto">
+  <div class="flex items-center gap-4 mb-8">
+    <a href="/employee" class="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 transition-all shadow-sm">
+      <i data-lucide="arrow-left" class="w-5 h-5"></i>
+    </a>
+    <div>
+      <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight"><%= pageTitle %></h2>
+      <p class="text-sm text-slate-500 font-medium">Lengkapi seluruh data sesuai dengan dokumen resmi karyawan.</p>
     </div>
+  </div>
+
+  <div class="hris-card shadow-2xl shadow-slate-200/50">
+    <form id="formEmployee" class="p-4">
+      <!-- SECTION: DATA PEKERJAAN -->
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+          <i data-lucide="briefcase" class="w-4 h-4"></i>
+        </div>
+        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-widest">Data Pekerjaan & Agent</h3>
+        <div class="h-[1px] bg-slate-100 flex-1 ml-2"></div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-12">
+        <div>
+          <label class="hris-label">Agent (Project) <span class="text-rose-500">*</span></label>
+          <select name="agentId" id="agentId" class="hris-input appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.5rem_center] bg-no-repeat" required>
+            <option value="">-- Pilih Agent --</option>
+            <% agents.forEach(a => { %>
+              <option value="<%= a.id %>" <%= employee && employee.agentId === a.id ? 'selected' : '' %>><%= a.name %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div>
+          <label class="hris-label flex justify-between">
+            <span>NIK (Natural Key)</span>
+            <% if (mode === 'create') { %>
+              <span class="text-[9px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter">Auto-Gen</span>
+            <% } %>
+          </label>
+          <input type="text" name="nik" id="nikInput" class="hris-input <%= mode === 'edit' ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-50 font-bold text-indigo-600' %>" placeholder="Generate otomatis..." value="<%= employee ? employee.nik : '' %>" <%= mode === 'edit' ? 'readonly' : '' %> required>
+        </div>
+
+        <div>
+          <label class="hris-label">Jabatan <span class="text-rose-500">*</span></label>
+          <input type="text" name="jabatan" class="hris-input" value="<%= employee ? employee.jabatan : '' %>" required>
+        </div>
+
+        <div>
+          <label class="hris-label">Level <span class="text-rose-500">*</span></label>
+          <select name="level" class="hris-input appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.5rem_center] bg-no-repeat" required>
+            <% ['Staff', 'Supervisor A', 'Supervisor B', 'Manager A', 'Manager B', 'Manager C', 'BOD'].forEach(l => { %>
+              <option value="<%= l %>" <%= employee && employee.level === l ? 'selected' : '' %>><%= l %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div>
+          <label class="hris-label">Joint Date <span class="text-rose-500">*</span></label>
+          <input type="date" name="jointDate" id="jointDate" class="hris-input" value="<%= employee ? new Date(employee.jointDate).toISOString().split('T')[0] : '' %>" required>
+        </div>
+
+        <div>
+          <label class="hris-label">Status TK <span class="text-rose-500">*</span></label>
+          <div class="flex gap-4 p-1 bg-slate-100 rounded-xl">
+            <label class="flex-1 text-center py-2 rounded-lg cursor-pointer transition-all has-[:checked]:bg-white has-[:checked]:text-indigo-600 has-[:checked]:shadow-sm text-xs font-bold text-slate-500">
+              <input type="radio" name="statusTk" value="PKWT" class="hidden" <%= (!employee || employee.statusTk === 'PKWT') ? 'checked' : '' %>> PKWT
+            </label>
+            <label class="flex-1 text-center py-2 rounded-lg cursor-pointer transition-all has-[:checked]:bg-white has-[:checked]:text-indigo-600 has-[:checked]:shadow-sm text-xs font-bold text-slate-500">
+              <input type="radio" name="statusTk" value="PKM" class="hidden" <%= (employee && employee.statusTk === 'PKM') ? 'checked' : '' %>> PKM
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION: DATA PERSONAL -->
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+          <i data-lucide="user" class="w-4 h-4"></i>
+        </div>
+        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-widest">Data Personal</h3>
+        <div class="h-[1px] bg-slate-100 flex-1 ml-2"></div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-12">
+        <div>
+          <label class="hris-label">Nama Lengkap Karyawan <span class="text-rose-500">*</span></label>
+          <input type="text" name="namaKaryawan" class="hris-input" value="<%= employee ? employee.namaKaryawan : '' %>" required>
+        </div>
+        <div>
+          <label class="hris-label">Nomor KTP</label>
+          <input type="text" name="nomorKtp" class="hris-input" value="<%= employee ? employee.nomorKtp : '' %>">
+        </div>
+        <div>
+          <label class="hris-label">Status Perkawinan</label>
+          <select name="statusPerkawinan" class="hris-input appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.5rem_center] bg-no-repeat">
+            <% ['TK/0', 'K/0', 'K/1', 'K/2', 'K/3'].forEach(s => { %>
+              <option value="<%= s %>" <%= employee && employee.statusPerkawinan === s ? 'selected' : '' %>><%= s %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div>
+          <label class="hris-label">Email Kantor <span class="text-rose-500">*</span></label>
+          <input type="email" name="emailKantor" class="hris-input" value="<%= employee ? employee.emailKantor : '' %>" required>
+        </div>
+      </div>
+
+      <!-- FOOTER ACTIONS -->
+      <div class="flex items-center justify-between pt-10 border-t border-slate-100 mt-10">
+        <a href="/employee" class="text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">Batalkan & Kembali</a>
+        <button type="submit" id="btnSubmit" class="hris-btn-primary px-12">
+          <%= mode === 'edit' ? 'Simpan Perubahan' : 'Daftarkan Karyawan' %>
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -178,6 +137,8 @@
           const data = await res.json();
           if (data.success) {
             nikInput.value = data.nik;
+            nikInput.classList.remove('text-slate-400');
+            nikInput.classList.add('text-indigo-600');
           } else {
             nikInput.value = '';
           }
@@ -196,12 +157,9 @@
     const formData = new FormData(formEmployee);
     const data = Object.fromEntries(formData.entries());
 
-    // Fix empty date for endDate
-    if (!data.endDate) data.endDate = null;
-
     try {
       btnSubmit.disabled = true;
-      btnSubmit.innerHTML = 'Menyimpan...';
+      btnSubmit.innerHTML = '<span class="animate-spin inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full mr-2"></span> Menyimpan...';
 
       const method = '<%= mode %>' === 'edit' ? 'PATCH' : 'POST';
       const url = '<%= mode %>' === 'edit' ? '/api/employee/<%= employee ? employee.nik : "" %>' : '/api/employee';
@@ -214,17 +172,16 @@
 
       const res = await response.json();
       if (res.success) {
-        alert(res.message);
         window.location.href = '/employee/' + (data.nik || '<%= employee ? employee.nik : "" %>');
       } else {
         alert('Gagal: ' + res.message);
         btnSubmit.disabled = false;
-        btnSubmit.innerHTML = 'Simpan Perubahan';
+        btnSubmit.innerHTML = '<%= mode === "edit" ? "Simpan Perubahan" : "Daftarkan Karyawan" %>';
       }
     } catch (error) {
       alert('Terjadi kesalahan sistem');
       btnSubmit.disabled = false;
-      btnSubmit.innerHTML = 'Simpan Perubahan';
+      btnSubmit.innerHTML = '<%= mode === "edit" ? "Simpan Perubahan" : "Daftarkan Karyawan" %>';
     }
   });
 </script>
