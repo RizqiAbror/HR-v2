@@ -1,35 +1,17 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
-    container_name: hr2-1_app
-    ports:
-      - "3000:3000"
-    environment:
-      - PORT=3000
-      # Koneksi database diarahkan ke service 'db' (MariaDB)
-      - DATABASE_URL=mysql://root:rootpassword@db:3307/hr2-1
-    depends_on:
-      - db
-    # Uncomment 2 baris di bawah ini jika ingin live-reload saat development:
-    # volumes:
-    #   - .:/usr/src/app
-    #   - /usr/src/app/node_modules
-
   db:
-    # Menggunakan MariaDB (bisa juga diganti mysql:8 jika perlu)
     image: mariadb:10.11
-    container_name: hr2-1_db
+    container_name: hr-v2-mariadb
     restart: always
-    command: [mysqld, --port=3307]
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: hr2-1
+      - MYSQL_DATABASE=db_hr_v2
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
     ports:
-      - "3307:3307"
+      - "3307:3306"
     volumes:
-      - hr2-1_db_data:/var/lib/mysql
+      - hr_v2_db_data:/var/lib/mysql
 
 volumes:
-  hr2-1_db_data:
+  hr_v2_db_data:
